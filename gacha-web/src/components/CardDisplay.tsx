@@ -2,6 +2,9 @@
 import { motion } from 'framer-motion';
 import PityDisplay from './PityDisplay';
 
+// Import API URL from store
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 type PityInfo = {
   rolls_until_rare: number;
   rolls_until_epic: number;
@@ -90,7 +93,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
         <div className="card-image-container" style={{ paddingTop: '56.25%' }}>  {/* 16:9 aspect ratio */}
           <img 
             className="card-image"
-            src={`http://localhost:3000/${card.image_path}`} 
+            src={`${API_URL}/${card.image_path}`} 
             alt={card.character}
           />
         </div>

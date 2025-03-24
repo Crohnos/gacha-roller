@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import CardDisplay from './CardDisplay';
 
+// Import API URL from store
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 type Card = {
   card_id: number;
   image_path: string;
@@ -172,7 +175,7 @@ const Collection = ({ cards, isOpen, onClose }: CollectionProps) => {
                         <div className="card-image-container" style={{ paddingTop: '100%' }}>
                           <img 
                             className="card-image"
-                            src={`http://localhost:3000/${card.image_path}`} 
+                            src={`${API_URL}/${card.image_path}`} 
                             alt={card.character}
                           />
                           <div className="card-info-overlay">
