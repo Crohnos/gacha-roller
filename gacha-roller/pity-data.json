@@ -1,0 +1,20 @@
+{
+  "web_user_1": {
+    "user_id": "web_user_1",
+    "commonStreak": 2,
+    "rollsSinceRare": 2,
+    "rollsSinceEpic": 2,
+    "rollsSinceHigher": 2,
+    "totalRolls": 2,
+    "lastRoll": "2025-03-24T01:17:40.932Z"
+  },
+  "temp_user_1": {
+    "user_id": "temp_user_1",
+    "commonStreak": 3,
+    "rollsSinceRare": 3,
+    "rollsSinceEpic": 3,
+    "rollsSinceHigher": 3,
+    "totalRolls": 3,
+    "lastRoll": "2025-03-24T02:14:50.418Z"
+  }
+}

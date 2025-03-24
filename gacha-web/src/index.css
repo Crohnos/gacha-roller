@@ -1,0 +1,657 @@
+/* Main styles with PicoCSS as base with significant customization */
+@import "@picocss/pico";
+
+/* Custom properties for consistent color/spacing theme */
+:root {
+  /* Color palette - adding more depth to our purples */
+  --primary: #9333ea; /* Purple 600 */
+  --primary-hover: #a855f7; /* Purple 500 */
+  --primary-focus: rgba(147, 51, 234, 0.25); /* Purple 600 with opacity */
+  --primary-inverse: #fff;
+  
+  /* Extended palette */
+  --purple-900: #581c87;
+  --purple-800: #6b21a8;
+  --purple-700: #7e22ce;
+  --purple-600: #9333ea;
+  --purple-500: #a855f7;
+  --purple-400: #c084fc;
+  --purple-300: #d8b4fe;
+  --purple-200: #e9d5ff;
+  --purple-100: #f3e8ff;
+  
+  /* Complementary colors */
+  --pink-600: #db2777;
+  --pink-500: #ec4899;
+  --pink-400: #f472b6;
+  
+  /* Background colors */
+  --bg-dark: #0c0a16; /* Darker base with purple tint */
+  --bg-card: #1a1625; /* Dark purple-tinted card background */
+  --bg-gradient-start: #12101a;
+  --bg-gradient-end: #1f1032;
+  
+  /* Neutral colors */
+  --gray-900: #111827;
+  --gray-800: #1f2937;
+  --gray-700: #374151;
+  --gray-600: #4b5563;
+  --gray-500: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  
+  /* Rarity colors */
+  --rarity-common: #d1d5db;
+  --rarity-rare: #60a5fa;
+  --rarity-epic: #c084fc;
+  --rarity-legendary: #fbbf24;
+  --rarity-mythic: #f87171;
+  
+  /* Card border glow effects */
+  --glow-common: 0 0 15px rgba(209, 213, 219, 0.3);
+  --glow-rare: 0 0 15px rgba(96, 165, 250, 0.4);
+  --glow-epic: 0 0 20px rgba(192, 132, 252, 0.5);
+  --glow-legendary: 0 0 25px rgba(251, 191, 36, 0.5);
+  --glow-mythic: 0 0 30px rgba(248, 113, 113, 0.6);
+  
+  /* Animation durations */
+  --transition-fast: 0.2s;
+  --transition-medium: 0.4s;
+  --transition-slow: 0.6s;
+  
+  /* Spacing standards */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+  
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Outfit', var(--font-sans);
+  --line-height: 1.6;
+}
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+/* Global styles and resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(150deg, var(--bg-gradient-start), var(--bg-gradient-end));
+  background-attachment: fixed;
+  color: var(--gray-100);
+  min-height: 100vh;
+  line-height: var(--line-height);
+  overflow-x: hidden;
+}
+
+/* Typography enhancements */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  font-size: 1.875rem;
+  letter-spacing: -0.025em;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+/* Layout containers */
+.container {
+  max-width: 1200px;
+  padding: 0 var(--space-md);
+  margin: 0 auto;
+}
+
+/* Header styling */
+header {
+  padding: var(--space-lg) 0;
+  position: relative;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 5;
+}
+
+/* Logo styling with animated gradient */
+.logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.5rem;
+  background: linear-gradient(45deg, var(--purple-500), var(--pink-500));
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient 5s ease infinite;
+  position: relative;
+  z-index: 2;
+}
+
+/* Glowing highlight for header */
+.logo::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(
+    circle,
+    rgba(168, 85, 247, 0.15),
+    rgba(168, 85, 247, 0.05),
+    transparent 70%
+  );
+  z-index: -1;
+  filter: blur(15px);
+}
+
+/* Main content area */
+main {
+  padding: var(--space-xl) 0;
+  position: relative;
+}
+
+/* Card styling with enhanced visual effects */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+}
+
+/* Card hover effect */
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Subtle card edge glow */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.05) 0%, transparent 50%);
+  border-radius: inherit;
+  z-index: -1;
+}
+
+/* Stylish UI card with gradient border */
+.ui-card {
+  background: rgba(17, 24, 39, 0.6);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: var(--space-lg);
+  position: relative;
+  margin-bottom: var(--space-lg);
+}
+
+.ui-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, var(--purple-500), var(--pink-500));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Rarity indicators with enhanced styling */
+.rarity-common { 
+  color: var(--rarity-common); 
+}
+
+.rarity-rare { 
+  color: var(--rarity-rare);
+  text-shadow: 0 0 5px rgba(96, 165, 250, 0.2);
+}
+
+.rarity-epic { 
+  color: var(--rarity-epic);
+  text-shadow: 0 0 5px rgba(192, 132, 252, 0.3);
+}
+
+.rarity-legendary { 
+  color: var(--rarity-legendary);
+  text-shadow: 0 0 5px rgba(251, 191, 36, 0.4);
+}
+
+.rarity-mythic { 
+  color: var(--rarity-mythic);
+  text-shadow: 0 0 5px rgba(248, 113, 113, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Custom button styles with improved visual feedback */
+.roll-button {
+  background: linear-gradient(to right, var(--purple-600), var(--pink-500));
+  background-size: 200% auto;
+  color: white;
+  font-weight: 600;
+  font-family: var(--font-display);
+  border: none;
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: 1em 1.5em;
+  font-size: 1rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-position var(--transition-medium);
+  letter-spacing: 0.025em;
+}
+
+.roll-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(147, 51, 234, 0.5);
+  background-position: right center;
+}
+
+.roll-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 5px 15px -5px rgba(147, 51, 234, 0.3);
+}
+
+/* Button ripple effect */
+.roll-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) scale(0);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: inherit;
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.roll-button:active::after {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* Secondary button */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--gray-300);
+  font-weight: 500;
+  padding: 0.75em 1.25em;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  border-color: var(--purple-500);
+  color: var(--purple-300);
+  background: rgba(147, 51, 234, 0.1);
+}
+
+/* Fancy progress indicators */
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: var(--space-md) 0;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(to right, var(--purple-600), var(--pink-500));
+  border-radius: var(--radius-full);
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Modal overlay with backdrop blur */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(12, 10, 22, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+/* Card display modal styling */
+.card-modal {
+  max-width: 28rem;
+  width: 100%;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Card collection grid with masonry-like layout */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-lg);
+}
+
+.card-grid-item {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  transition: all var(--transition-medium);
+  transform-origin: center bottom;
+}
+
+.card-grid-item:hover {
+  transform: translateY(-5px) scale(1.02);
+  z-index: 2;
+}
+
+/* Card image container with aspect ratio */
+.card-image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 100%; /* 1:1 Aspect Ratio */
+  overflow: hidden;
+}
+
+.card-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-medium);
+}
+
+.card-grid-item:hover .card-image {
+  transform: scale(1.05);
+}
+
+/* Card info overlay */
+.card-info-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 20%, transparent 80%);
+  opacity: 0.9;
+  transition: opacity var(--transition-medium);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--space-md);
+}
+
+.card-grid-item:hover .card-info-overlay {
+  opacity: 1;
+}
+
+/* Rarity badge styling */
+.rarity-badge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--gray-200);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhancement tags */
+.enhancement-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-right: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
+/* Fancy section titles */
+.section-title {
+  position: relative;
+  font-size: 1.25rem;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-sm);
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, var(--purple-500), transparent);
+}
+
+/* Styled scrollbars for webkit browsers */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--purple-700), var(--purple-900));
+  border-radius: var(--radius-full);
+  border: 3px solid var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(var(--purple-600), var(--purple-800));
+}
+
+/* Footer styling */
+footer {
+  padding: var(--space-xl) 0;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.875rem;
+  position: relative;
+}
+
+footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gray-700), transparent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-md);
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  .container {
+    padding: 0 var(--space-sm);
+  }
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Custom PicoCSS overrides */
+[role="button"],
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  --box-shadow: none;
+}
+
+article {
+  background: rgba(17, 24, 39, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  margin: var(--space-lg) 0;
+  padding: var(--space-lg);
+}
+
+dialog article {
+  margin: 0;
+}
+
+/* Custom utility classes */
+.text-gradient {
+  background: linear-gradient(to right, var(--purple-400), var(--pink-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.mb-sm {
+  margin-bottom: var(--space-sm);
+}
+
+.mb-md {
+  margin-bottom: var(--space-md);
+}
+
+.mb-lg {
+  margin-bottom: var(--space-lg);
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
