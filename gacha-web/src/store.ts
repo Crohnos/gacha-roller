@@ -245,7 +245,11 @@ export const useStore = create<State>((set, get) => ({
     
     try {
       // Add the forced rarity parameter if specified
-      const payload = {
+      const payload: { 
+        user_id: string; 
+        username: string; 
+        forced_rarity?: string 
+      } = {
         user_id: user.userId,
         username: user.username
       };
