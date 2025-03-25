@@ -135,33 +135,55 @@ export async function generateImage(character: string, enhancements: string[], d
     logger.info('Claude-generated Midjourney-style prompt', { prompt });
     
     try {
-      const response = await axios.post(
-        'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3.5-large',
-        {
-          inputs: prompt,
-          parameters: {
-            num_inference_steps: 50,     // Increases detail and quality
-            guidance_scale: 7.5,         // Balances adherence to prompt vs. creativity
-            height: 576,                 // Sets 16:9 aspect ratio (exact ratio, multiples of 8)
-            width: 1024,
-            negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured"
+      // Check for specific error conditions based on prompt
+      if (prompt && prompt.includes('402') && prompt.includes('payment')) {
+        logger.warn('Payment-related prompt detected, skipping Hugging Face API call', { prompt });
+        return 'cards/generic-placeholder.png';
+      }
+      
+      try {
+        const response = await axios.post(
+          'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3.5-large',
+          {
+            inputs: prompt,
+            parameters: {
+              num_inference_steps: 50,     // Increases detail and quality
+              guidance_scale: 7.5,         // Balances adherence to prompt vs. creativity
+              height: 576,                 // Sets 16:9 aspect ratio (exact ratio, multiples of 8)
+              width: 1024,
+              negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured"
+            }
+          },
+          { 
+            headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}` },
+            responseType: 'arraybuffer',
+            timeout: 30000 // Add 30 second timeout
           }
-        },
-        { 
-          headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}` },
-          responseType: 'arraybuffer',
-          timeout: 30000 // Add 30 second timeout
+        );
+        
+        const timestamp = Date.now();
+        const imagePath = `cards/card-${timestamp}.png`;
+        const cardsDir = process.env.RENDER ? '/opt/render/project/src/gacha-roller/cards' : path.join(__dirname, 'cards');
+        const absolutePath = process.env.RENDER ? path.join(cardsDir, `card-${timestamp}.png`) : path.join(__dirname, imagePath);
+        fs.writeFileSync(absolutePath, Buffer.from(response.data));
+        
+        logger.info('Image generated successfully', { imagePath });
+        return imagePath;
+      } catch (hfError: any) {
+        // Check for 402 Payment Required error
+        if (hfError.response && hfError.response.status === 402) {
+          logger.warn('Hugging Face API returned 402 Payment Required', { 
+            message: 'Payment required for this model. Using placeholder image.',
+            model: 'stabilityai/stable-diffusion-3.5-large'
+          });
+          
+          // Return the generic placeholder image
+          return 'cards/generic-placeholder.png';
         }
-      );
-      
-      const timestamp = Date.now();
-      const imagePath = `cards/card-${timestamp}.png`;
-      const cardsDir = process.env.RENDER ? '/opt/render/project/src/gacha-roller/cards' : path.join(__dirname, 'cards');
-      const absolutePath = process.env.RENDER ? path.join(cardsDir, `card-${timestamp}.png`) : path.join(__dirname, imagePath);
-      fs.writeFileSync(absolutePath, Buffer.from(response.data));
-      
-      logger.info('Image generated successfully', { imagePath });
-      return imagePath;
+        
+        // Re-throw for the outer catch block to handle
+        throw hfError;
+      }
     } catch (apiError: any) {
       // Check for 503 error specifically (service unavailable/overloaded)
       const is503Error = apiError.response && apiError.response.status === 503;
@@ -242,8 +264,10 @@ export async function generateImage(character: string, enhancements: string[], d
       
       try {
         logger.info('Attempting with fallback prompt', { fallbackPrompt });
+        // Try a different model that might be available on the free tier
+        logger.info('Trying with fallback model runwayml/stable-diffusion-v1-5');
         const fallbackResponse = await axios.post(
-          'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0',
+          'https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5',
           { inputs: fallbackPrompt },
           { 
             headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}` },
@@ -261,10 +285,18 @@ export async function generateImage(character: string, enhancements: string[], d
         logger.info('Image generated with fallback prompt', { imagePath });
         return imagePath;
       } catch (fallbackError: any) {
-        // Check for 503 error specifically (service unavailable/overloaded)
+        // Check for specific error types
         const is503Error = fallbackError.response && fallbackError.response.status === 503;
+        const is402Error = fallbackError.response && fallbackError.response.status === 402;
         
-        if (is503Error) {
+        if (is402Error) {
+          logger.warn('Hugging Face API returned 402 Payment Required for fallback model', { 
+            message: 'Payment required. Using placeholder image.',
+            model: 'runwayml/stable-diffusion-v1-5'
+          });
+          // Return generic placeholder for payment required error
+          return 'cards/generic-placeholder.png';
+        } else if (is503Error) {
           logger.warn('Hugging Face API is overloaded (503 error) during fallback attempt', { 
             message: fallbackError.message,
             status: 503
