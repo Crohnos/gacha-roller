@@ -301,14 +301,21 @@ export async function generateImage(character: string, enhancements: string[], d
             message: fallbackError.message,
             status: 503
           });
+          // Return generic placeholder for 503 error
+          return 'cards/generic-placeholder.png';
         } else {
           // If fallback fails for other reasons, log as error
           logger.error('Fallback image generation failed', { 
             error: fallbackError.message, 
             status: fallbackError.response?.status 
           });
+          // Return generic placeholder for other errors too
+          return 'cards/generic-placeholder.png';
         }
         
+        // This code is unreachable due to the returns above, but kept for reference
+        // in case the error handling logic changes in the future
+        /*
         // Extract character and franchise if not already done
         if (!characterName || characterName === character) {
           const characterMatch = character.match(/^(.*?)\s*\((.*?)\)$/);
@@ -331,6 +338,7 @@ export async function generateImage(character: string, enhancements: string[], d
           logger.info('Using existing placeholder image', { placeholderPath });
           return placeholderPath;
         }
+        */
         
         // Otherwise use a generic placeholder
         const genericPlaceholderPath = 'cards/generic-placeholder.png';
