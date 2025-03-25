@@ -62,6 +62,16 @@ export async function generateImage(character: string, enhancements: string[], d
       franchise = characterMatch[2].trim();
     }
     
+    // Check if we have API keys
+    if (!process.env.ANTHROPIC_API_KEY || !process.env.HUGGING_FACE_API_KEY) {
+      logger.warn('Missing API keys, using placeholder image', { 
+        anthropic: !!process.env.ANTHROPIC_API_KEY, 
+        huggingface: !!process.env.HUGGING_FACE_API_KEY 
+      });
+      
+      return 'cards/generic-placeholder.png';
+    }
+    
     // Use Claude to generate a Midjourney-style prompt
     let prompt = "";
     try {
@@ -495,6 +505,12 @@ export async function generateDescription(character: string, enhancements: strin
       franchise = characterMatch[2].trim();
     }
     
+    // Check if we have an API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      logger.warn('No ANTHROPIC_API_KEY found, using fallback description', { character });
+      return generateFallbackDescription(characterName, franchise, enhancements);
+    }
+    
     const enhancementsText = enhancements.join(', ');
     const prompt = `
     <human>
@@ -507,39 +523,75 @@ export async function generateDescription(character: string, enhancements: strin
     
     <assistant>`;
     
-    const response = await axios.post(
-      'https://api.anthropic.com/v1/messages',
-      {
-        model: "claude-3-haiku-20240307",
-        max_tokens: 500,
-        messages: [
-          { role: "user", content: prompt }
-        ]
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01'
+    try {
+      const response = await axios.post(
+        'https://api.anthropic.com/v1/messages',
+        {
+          model: "claude-3-haiku-20240307",
+          max_tokens: 500,
+          messages: [
+            { role: "user", content: prompt }
+          ]
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01'
+          }
         }
-      }
-    );
+      );
+      
+      let description = response.data.content[0].text;
+      
+      // Clean up the description to remove any explanatory text
+      description = description
+        .replace(/^(Here is|Here's|I've written) a (short |brief |100-word |)(story|tale) about .*?:\s*/i, '')
+        .replace(/^In this (alternate universe|story|world|scenario),?\s*/i, '')
+        .replace(/^Here goes:?\s*/i, '')
+        .trim();
+      
+      logger.info('Description generated successfully', { description: description.substring(0, 50) + '...' });
+      
+      return description;
+    } catch (apiError) {
+      logger.error('API error in description generation', { error: apiError, character });
+      return generateFallbackDescription(characterName, franchise, enhancements);
+    }
+  } catch (error) {
+    logger.error('Error generating description', { error, character });
+    return generateFallbackDescription(character, '', enhancements);
+  }
+}
+
+// Fallback description generator that doesn't require API
+function generateFallbackDescription(character: string, franchise: string, enhancements: string[] = []) {
+  try {
+    logger.info('Using fallback description generator', { character, franchise, enhancements });
     
-    let description = response.data.content[0].text;
+    const enhancementText = enhancements.length > 0 ? enhancements.join(' and ') : 'unique qualities';
     
-    // Clean up the description to remove any explanatory text
-    description = description
-      .replace(/^(Here is|Here's|I've written) a (short |brief |100-word |)(story|tale) about .*?:\s*/i, '')
-      .replace(/^In this (alternate universe|story|world|scenario),?\s*/i, '')
-      .replace(/^Here goes:?\s*/i, '')
-      .trim();
+    // Create a basic template
+    let description = `In an alternate universe, ${character}${franchise ? ` from ${franchise}` : ''} has been transformed by ${enhancementText}. `;
     
-    logger.info('Description generated successfully', { description: description.substring(0, 50) + '...' });
+    // Add some character-specific content
+    if (franchise.toLowerCase().includes('star trek')) {
+      description += `No longer bound by the constraints of Starfleet protocols, this version of ${character} navigates a cosmos where technology and humanity blur in unexpected ways. With circuits exposed from battle damage and a perspective that seems to frame every moment in dramatic lighting, this ${character} has developed a more nuanced understanding of organic life through hardship and conflict.`;
+    } else if (franchise.toLowerCase().includes('star wars')) {
+      description += `The Force manifests differently in this reality, and ${character} stands at the crossroads between the light and dark sides. The scars of countless battles tell a story of survival against overwhelming odds, while something about their presence seems to demand attention - as if every movement were being captured for posterity.`;
+    } else if (franchise.toLowerCase().includes('marvel')) {
+      description += `In this universe, the line between hero and villain is constantly shifting. ${character}'s powers have evolved in response to constant conflict, leaving both physical and psychological marks. Their story unfolds like a meticulously crafted film sequence, every decision carrying weight beyond a single timeline.`;
+    } else {
+      description += `Reality itself seems to bend around this version of ${character}, creating a narrative where they play a pivotal role in reshaping their world. The signs of past conflicts have hardened their resolve, while their perspective on events seems almost cinematic - as if they're simultaneously experiencing and observing their own story unfold.`;
+    }
+    
+    // Add a conclusion
+    description += ` Whether this transformation represents evolution or corruption remains to be seen, but one thing is certain - this ${character} is forging a path distinctly their own, forever changed by circumstances both beautiful and terrible.`;
     
     return description;
   } catch (error) {
-    logger.error('Error generating description', { error, character });
-    throw new Error('Failed to generate description');
+    logger.error('Error in fallback description', { error });
+    return `A battle-scarred ${character} from an alternate universe where reality unfolds with cinematic flair.`;
   }
 }
 
