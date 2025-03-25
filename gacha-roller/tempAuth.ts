@@ -8,7 +8,7 @@ export function setupTempAuthRoutes(app: express.Express) {
   
   // Add specific CORS handling for auth routes
   const corsOptions = {
-    origin: 'http://localhost:5173',
+    origin: process.env.RENDER ? 'https://gacha-web.onrender.com' : 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
@@ -16,7 +16,10 @@ export function setupTempAuthRoutes(app: express.Express) {
   
   // Apply CORS to all auth routes
   app.use('/auth', function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+    const origin = process.env.RENDER ? 'https://gacha-web.onrender.com' : 'http://localhost:5173';
+    console.log('Auth request origin:', req.headers.origin, 'Using origin:', origin);
+    
+    res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -85,7 +88,8 @@ export function setupTempAuthRoutes(app: express.Express) {
       res.cookie('temp_auth', 'true', {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         httpOnly: false, // Allow JS access for development
-        sameSite: 'lax'
+        sameSite: process.env.RENDER ? 'none' : 'lax',
+        secure: process.env.RENDER ? true : false
       });
       
       // For development, accept correct credentials
@@ -139,7 +143,8 @@ export function setupTempAuthRoutes(app: express.Express) {
     res.cookie('temp_auth', 'true', {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       httpOnly: false, // Allow JS access for development
-      sameSite: 'lax'
+      sameSite: process.env.RENDER ? 'none' : 'lax',
+      secure: process.env.RENDER ? true : false
     });
     
     // Registration successful

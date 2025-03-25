@@ -224,10 +224,27 @@ async function startServer() {
     
     // Setup health check endpoint
     app.get('/health', (req, res) => {
+      // Set explicit CORS headers for this endpoint
+      res.header('Access-Control-Allow-Origin', 'https://gacha-web.onrender.com');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      
       res.status(200).json({ 
         status: 'ok',
         uptime: process.uptime(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        cors: 'enabled'
+      });
+    });
+    
+    // Add a CORS test endpoint
+    app.get('/cors-test', (req, res) => {
+      // Set explicit CORS headers for this endpoint
+      res.header('Access-Control-Allow-Origin', 'https://gacha-web.onrender.com');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      
+      res.status(200).json({
+        message: 'CORS is working!',
+        origin: req.headers.origin || 'unknown'
       });
     });
     
