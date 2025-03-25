@@ -1,0 +1,34 @@
+services:
+  # Backend API service
+  - type: web
+    name: gacha-roller
+    env: node
+    buildCommand: cd gacha-roller && npm install -g bun && bun install
+    startCommand: cd gacha-roller && bun run index.ts
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: RENDER
+        value: true
+      - key: NODE_ENV
+        value: production
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: HUGGING_FACE_API_KEY
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+    disk:
+      name: cards
+      mountPath: /opt/render/project/src/gacha-roller/cards
+      sizeGB: 1
+
+  # Frontend static site
+  - type: web
+    name: gacha-web
+    env: static
+    buildCommand: cd gacha-web && npm install -g bun && bun install && bun run build
+    staticPublishPath: gacha-web/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://gacha-roller.onrender.com

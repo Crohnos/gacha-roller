@@ -17,7 +17,7 @@ import logger from './logger';
 dotenv.config();
 
 // Ensure cards directory exists
-const cardsDir = path.join(__dirname, 'cards');
+const cardsDir = process.env.RENDER ? '/opt/render/project/src/gacha-roller/cards' : path.join(__dirname, 'cards');
 if (!fs.existsSync(cardsDir)) {
   fs.mkdirSync(cardsDir, { recursive: true });
   logger.info('Cards directory created', { path: cardsDir });
@@ -52,7 +52,7 @@ app.use(cookieParser());
 
 // Configure CORS for cross-origin requests
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL
+  origin: process.env.RENDER ? ['https://gacha-web.onrender.com', 'http://localhost:5173'] : 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -62,7 +62,7 @@ app.use(cors({
 
 // Add explicit handling for OPTIONS requests
 app.options('*', cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.RENDER ? ['https://gacha-web.onrender.com', 'http://localhost:5173'] : 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -112,8 +112,9 @@ async function initializeDb() {
     sqlite3.verbose();
   }
   
+  const dbPath = process.env.RENDER ? '/tmp/gacha.db' : 'gacha.db';
   const db = await open({
-    filename: 'gacha.db',
+    filename: dbPath,
     driver: sqlite3.Database
   });
   

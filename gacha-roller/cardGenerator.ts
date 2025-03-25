@@ -146,7 +146,8 @@ export async function generateImage(character: string, enhancements: string[], d
       
       const timestamp = Date.now();
       const imagePath = `cards/card-${timestamp}.png`;
-      const absolutePath = path.join(__dirname, imagePath);
+      const cardsDir = process.env.RENDER ? '/opt/render/project/src/gacha-roller/cards' : path.join(__dirname, 'cards');
+      const absolutePath = process.env.RENDER ? path.join(cardsDir, `card-${timestamp}.png`) : path.join(__dirname, imagePath);
       fs.writeFileSync(absolutePath, Buffer.from(response.data));
       
       logger.info('Image generated successfully', { imagePath });
@@ -243,7 +244,8 @@ export async function generateImage(character: string, enhancements: string[], d
         
         const timestamp = Date.now();
         const imagePath = `cards/card-${timestamp}.png`;
-        const absolutePath = path.join(__dirname, imagePath);
+        const cardsDir = process.env.RENDER ? '/opt/render/project/src/gacha-roller/cards' : path.join(__dirname, 'cards');
+        const absolutePath = process.env.RENDER ? path.join(cardsDir, `card-${timestamp}.png`) : path.join(__dirname, imagePath);
         fs.writeFileSync(absolutePath, Buffer.from(fallbackResponse.data));
         
         logger.info('Image generated with fallback prompt', { imagePath });
