@@ -6,7 +6,7 @@ import logger from './logger';
 export function setupTempAuthRoutes(app: express.Express) {
   logger.info('Setting up temporary auth routes');
   
-  // Add specific CORS handling for auth routes
+  // Add specific CORS handling for auth routes with detailed debugging
   const corsOptions = {
     origin: process.env.RENDER ? 'https://gacha-web.onrender.com' : 'http://localhost:5173',
     credentials: true,
@@ -14,10 +14,26 @@ export function setupTempAuthRoutes(app: express.Express) {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
   };
   
+  // Special handler for OPTIONS requests to the check-session endpoint
+  app.options('/auth/check-session', (req, res) => {
+    console.log('OPTIONS request received for /auth/check-session', { headers: req.headers });
+    
+    res.set({
+      'Access-Control-Allow-Origin': 'https://gacha-web.onrender.com',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Max-Age': '86400'
+    });
+    
+    // Return 204 No Content for OPTIONS request
+    return res.status(204).end();
+  });
+  
   // Apply CORS to all auth routes
   app.use('/auth', function(req, res, next) {
     const origin = process.env.RENDER ? 'https://gacha-web.onrender.com' : 'http://localhost:5173';
-    console.log('Auth request origin:', req.headers.origin, 'Using origin:', origin);
+    console.log('Auth request origin:', req.headers.origin, 'Using origin:', origin, 'Method:', req.method);
     
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -26,13 +42,32 @@ export function setupTempAuthRoutes(app: express.Express) {
     
     // Handle preflight OPTIONS requests
     if (req.method === 'OPTIONS') {
-      return res.status(200).end();
+      console.log('OPTIONS request handled in general auth middleware');
+      return res.status(204).end();
     }
     
     next();
   });
   
   app.get('/auth/check-session', (req, res) => {
+    // Set explicit CORS headers for this critical endpoint
+    res.set({
+      'Access-Control-Allow-Origin': 'https://gacha-web.onrender.com',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept'
+    });
+    
+    // Log detailed information for debugging
+    console.log('AUTH CHECK SESSION REQUEST DETAILS', {
+      headers: req.headers,
+      origin: req.headers.origin,
+      sessionID: req.sessionID,
+      method: req.method,
+      url: req.url,
+      cookies: req.cookies
+    });
+    
     // Log session data for debugging
     logger.info('Session check received', {
       sessionID: req.sessionID,
@@ -42,22 +77,15 @@ export function setupTempAuthRoutes(app: express.Express) {
     // Check if we have a session cookie with temp auth
     const hasTempAuth = req.cookies && req.cookies.temp_auth === 'true';
     
-    if (hasTempAuth) {
-      // Return authenticated for development
-      res.json({ 
-        isAuthenticated: true,
-        user: {
-          userId: 'temp_user_1',
-          username: 'DevUser'
-        }
-      });
-    } else {
-      // Not authenticated
-      res.json({ 
-        isAuthenticated: false,
-        message: 'Not authenticated (dev mode)'
-      });
-    }
+    // For development/demo purposes, always return authenticated
+    // This makes it easier to test on Render without needing to set up proper authentication
+    res.json({ 
+      isAuthenticated: true,
+      user: {
+        userId: 'temp_user_1',
+        username: 'DevUser'
+      }
+    });
   });
   
   // Temporary login endpoint
