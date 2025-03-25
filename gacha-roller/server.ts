@@ -26,6 +26,22 @@ if (!fs.existsSync(cardsDir)) {
 // Create Express app
 const app = express();
 
+// CORS headers middleware - applies to all requests
+app.use((req, res, next) => {
+  // Explicitly set CORS headers for all responses
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle OPTIONS method
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
 // Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
@@ -52,17 +68,49 @@ app.use(cookieParser());
 
 // Configure CORS for cross-origin requests
 app.use(cors({
-  origin: process.env.RENDER ? ['https://gacha-web.onrender.com', 'http://localhost:5173'] : 'http://localhost:5173',
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://gacha-web.onrender.com',
+      'http://localhost:5173'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      // Still allow for development purposes
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Set-Cookie'],
-  preflightContinue: false // Changed to false to let cors middleware handle OPTIONS
+  preflightContinue: false
 }));
 
 // Add explicit handling for OPTIONS requests
 app.options('*', cors({
-  origin: process.env.RENDER ? ['https://gacha-web.onrender.com', 'http://localhost:5173'] : 'http://localhost:5173',
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://gacha-web.onrender.com',
+      'http://localhost:5173'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin (OPTIONS):', origin);
+      // Still allow for development purposes
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -75,10 +123,10 @@ app.use(session({
   resave: true, // Changed to true for development to ensure session updates are saved
   saveUninitialized: true, // Changed to true for development to create session for all requests
   cookie: {
-    secure: false, // Set to false for development (no HTTPS)
+    secure: process.env.RENDER ? true : false, // Secure in production (Render uses HTTPS)
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: 'lax' // Allow cross-site cookies for development
+    sameSite: 'none' // Required for cross-domain cookie with secure=true
   }
 }));
 
