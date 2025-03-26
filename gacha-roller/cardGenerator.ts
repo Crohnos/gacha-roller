@@ -200,51 +200,83 @@ export async function generateImage(character: string, enhancements: string[], d
       return 'cards/generic-placeholder.png';
     }
     
-    // Use Claude to generate a completely redesigned prompt that creates recognizable franchise-accurate characters
+    // Completely redesigned prompt generation system with 4 distinct elements
     let prompt = "";
     try {
-      // Select just a few of the most relevant enhancements to avoid overwhelming the image
-      const relevantEnhancements = enhancements.slice(0, Math.min(5, enhancements.length));
-      const enhancementsText = relevantEnhancements.join(', ');
+      // Get a suitable twist from the enhancements
+      const possibleTwists = [
+        "wearing a cowboy hat",
+        "with glowing neon accents",
+        "made of cardboard",
+        "as a steampunk version",
+        "with a medieval knight armor",
+        "wearing a space suit",
+        "in samurai gear",
+        "with cyberpunk augmentations",
+        "as an ancient statue",
+        "wearing formal business attire",
+        "made of crystal",
+        "as a ghostly apparition",
+        "with fairy wings",
+        "in pirate clothing",
+        "as a wild west sheriff"
+      ];
       
-      // Brand new prompt engineering approach
+      // Either use the first enhancement as a twist or pick a random one from our list
+      let twist = '';
+      if (enhancements && enhancements.length > 0) {
+        twist = enhancements[0];
+      } else {
+        twist = possibleTwists[Math.floor(Math.random() * possibleTwists.length)];
+      }
+      
+      // Get a suitable art style from the enhancements or defaults
+      const possibleArtStyles = [
+        "photorealistic",
+        "impressionism",
+        "digital art",
+        "comic book style",
+        "oil painting",
+        "watercolor",
+        "vector art",
+        "cyberpunk",
+        "vaporwave",
+        "anime style",
+        "concept art",
+        "3D rendering",
+        "pencil sketch",
+        "pixel art",
+        "pop art"
+      ];
+      
+      // Either use the second enhancement as art style or pick a random one
+      let artStyle = '';
+      if (enhancements && enhancements.length > 1) {
+        artStyle = enhancements[1];
+      } else {
+        artStyle = possibleArtStyles[Math.floor(Math.random() * possibleArtStyles.length)];
+      }
+      
+      // Standard positive and negative prompts
+      const positivePrompts = "high quality, ultra detailed, sharp focus, professional";
+      const negativePrompts = "blurry, distorted, low quality, poorly rendered, deformed";
+      
+      // Structured prompt creation approach using Claude
       const promptGenerationPrompt = `
       <human>
-      I need you to create a highly specific prompt for Stable Diffusion to generate a character image. This is for a gacha game where we're having problems with characters being unrecognizable blobs or generic robots.
+      Create an image generation prompt with exactly 4 elements as shown below. Your response must ONLY be the formatted prompt with these 4 elements in this exact order:
 
-      Character: ${characterName}
-      Franchise: ${franchise}
-      Key Style Elements: ${enhancementsText}
+      1. SUBJECT: ${characterName} from ${franchise}, clearly identifiable with canonical appearance
+      2. TWIST: ${twist}
+      3. ART STYLE: in the style of ${artStyle}
+      4. QUALITY TERMS: ${positivePrompts}. Not ${negativePrompts}
       
-      CRITICAL REQUIREMENTS:
+      Format as a single cohesive prompt: "SUBJECT TWIST, ART STYLE, QUALITY TERMS. Not NEGATIVE TERMS."
       
-      1. CHARACTER ACCURACY (HIGHEST PRIORITY):
-         - Make the character IMMEDIATELY recognizable to fans of the franchise
-         - Include their most iconic visual elements, outfit, and color scheme
-         - Specify their exact body type, face shape, distinctive features
-         - Include their canonical pose, expression, or stance if they have one
-         
-      2. ONE UNIQUE TWIST (choose only ONE):
-         - Add ONE unexpected element that alters the character without making them unrecognizable
-         - Examples: a cowboy hat, cybernetic arm, ethereal glow, fantasy armor, steampunk goggles, etc.
-         - The twist should complement, not overwhelm the character's iconic look
-         
-      3. HIGH QUALITY ART DIRECTION:
-         - Photo-realistic, high-detail render, 8K, film-quality
-         - Use specific camera lens types, lighting setup (dramatic rim lighting, etc.)
-         - Professional composition (portrait, 3/4 view, etc.)
-         - Specify a clear background that enhances the character
-         
-      RESPONSE FORMAT:
-      - Provide ONLY the prompt text with no explanations or additional text
-      - Use the format: "[Character description with exact visual details], [ONE unique twist element], [art style/quality terms], [camera/lighting details]"
-      - Do NOT use "--ar 16:9" or other MidJourney specific syntax
-      - Limit to 2-3 sentences maximum, but pack in maximum visual detail
+      Examples:
+      "A T-800 robot from The Terminator franchise wearing a cowboy hat, in the style of impressionism, high quality, ultra detailed. Not blurry, not distorted, not cartoonish"
       
-      EXAMPLES FOR CLARITY:
-      Example 1: "Optimus Prime from Transformers, exact G1 design with red and blue paint scheme, tall humanoid robot with truck elements, iconic chest windows and face plate, wearing a medieval knight's helmet with plume, hyperrealistic 8K render, dramatic side lighting, professional studio photography, detailed mechanical background with depth of field"
-      
-      Example 2: "Darth Vader in full black armor and helmet with red lightsaber, imposing stance with cape billowing, wearing steampunk goggles and brass mechanical arm, photorealistic 8K, dramatic low angle shot, volumetric lighting with red and blue highlights, star destroyer bridge background"
+      "TARS from Interstellar franchise made of cardboard, in the style of a cartoon, sharp, colorful. Not realistic."
       </human>
       
       <assistant>`;
@@ -253,7 +285,7 @@ export async function generateImage(character: string, enhancements: string[], d
         'https://api.anthropic.com/v1/messages',
         {
           model: "claude-3-haiku-20240307",
-          max_tokens: 300,
+          max_tokens: 200,
           messages: [
             { role: "user", content: promptGenerationPrompt }
           ]
@@ -275,18 +307,21 @@ export async function generateImage(character: string, enhancements: string[], d
         .replace(/^(Here's|Here is|I've created) (a|the|an) (prompt|image prompt).*?:/i, '')
         .replace(/^prompt:/i, '')
         .trim();
-      
-      // Add standard quality boosters to ensure consistency
-      prompt += ", ultra high resolution, award winning photography, cinema quality, professional, hyper detailed, sharp focus";
         
-      logger.info('Successfully generated improved character prompt', { prompt });
+      logger.info('Successfully generated 4-element prompt', { prompt });
     } catch (claudePromptError) {
-      // If Claude fails to generate a prompt, use a better hardcoded fallback
-      logger.error('Failed to generate character prompt, using improved fallback', { error: claudePromptError });
+      // If Claude fails to generate a prompt, create a structured fallback
+      logger.error('Failed to generate 4-element prompt, using fallback', { error: claudePromptError });
       
-      // Create a more detailed fallback prompt
-      const fallbackEnhancements = enhancements.slice(0, 3).join(', ');
-      prompt = `${characterName} from ${franchise}, exact canon appearance with iconic outfit and features, with ${fallbackEnhancements}, photorealistic 8K render, dramatic studio lighting, professional photography, detailed background, sharp focus`;
+      // Select a fallback twist and art style
+      const fallbackTwist = enhancements && enhancements.length > 0 ? 
+        enhancements[0] : "with a unique futuristic design";
+      
+      const fallbackArtStyle = enhancements && enhancements.length > 1 ? 
+        enhancements[1] : "photorealistic";
+      
+      // Create fallback prompt with the 4-element structure
+      prompt = `${characterName} from ${franchise} ${fallbackTwist}, in the style of ${fallbackArtStyle}, high quality, detailed, sharp focus. Not blurry, not distorted, not poorly rendered.`;
     }
     
     logger.info('Claude-generated Midjourney-style prompt', { prompt });
@@ -372,22 +407,44 @@ export async function generateImage(character: string, enhancements: string[], d
         }
       }
       
-      // Generate a better fallback prompt with Claude that focuses on character accuracy
+      // Generate a fallback prompt with the same 4-element structure
       let fallbackPrompt = '';
       try {
-        // Create a simplified but still effective version of our main prompt
+        // Select a fallback twist and art style from enhancements or defaults
+        let fallbackTwist = '';
+        if (enhancements && enhancements.length > 0) {
+          fallbackTwist = enhancements[0];
+        } else {
+          // Some simple fallback twists
+          const twists = ["with a cybernetic upgrade", "in battle pose", "wearing a hat", "with glowing eyes"];
+          fallbackTwist = twists[Math.floor(Math.random() * twists.length)];
+        }
+        
+        let fallbackArtStyle = '';
+        if (enhancements && enhancements.length > 1) {
+          fallbackArtStyle = enhancements[1];
+        } else {
+          // Simpler art styles that tend to work well with the fallback model
+          const styles = ["digital art", "concept art", "realistic", "3D render"];
+          fallbackArtStyle = styles[Math.floor(Math.random() * styles.length)];
+        }
+        
+        // Create a prompt following the 4-element structure using Claude
         const fallbackPromptRequest = `
         <human>
-        Create a prompt for Stable Diffusion to generate an image of ${characterName} from ${franchise}.
+        Create an image generation prompt with exactly 4 elements as shown below:
+
+        1. SUBJECT: ${characterName} from ${franchise}, clearly identifiable
+        2. TWIST: ${fallbackTwist}
+        3. ART STYLE: in the style of ${fallbackArtStyle}
+        4. QUALITY TERMS: sharp, detailed, high quality. Not blurry, not distorted
         
-        CRITICAL: The character MUST be immediately recognizable with their exact canonical appearance.
+        Format as a single prompt exactly like these examples:
+        "A T-800 robot from The Terminator franchise wearing a cowboy hat, in the style of impressionism, high quality, ultra detailed. Not blurry, not distorted, not cartoonish"
         
-        Include these elements:
-        1. Specific visual details that make this character instantly recognizable (outfit, colors, distinctive features)
-        2. ONE interesting twist: ${enhancements[0] || 'alternate lighting'} 
-        3. High quality terms: photorealistic, detailed, professional
+        "TARS from Interstellar franchise made of cardboard, in the style of a cartoon, sharp, colorful. Not realistic."
         
-        Keep it concise but descriptive (2 sentences max). NO explanations, just the prompt text.
+        Your response must ONLY be the formatted prompt with no explanations.
         </human>
         
         <assistant>`;
@@ -416,16 +473,19 @@ export async function generateImage(character: string, enhancements: string[], d
           .replace(/^prompt:/i, '')
           .trim();
         
-        // Add quality booster
-        fallbackPrompt += ", ultra detailed, 8K resolution, professional photography, sharp focus";
-        
-        logger.info('Created improved fallback prompt', { fallbackPrompt });
+        logger.info('Created 4-element fallback prompt', { fallbackPrompt });
       } catch (claudeError) {
-        // If Claude fails, use an improved hardcoded fallback
-        const fallbackEnhancement = enhancements[0] || 'dramatic lighting';
-        fallbackPrompt = `${characterName} from ${franchise} with exact canonical appearance, distinctive features and iconic outfit, with ${fallbackEnhancement}, photorealistic, 8K resolution, professional studio photography, sharp focus`;
+        // If Claude fails, create a structured fallback manually
+        const fallbackTwist = enhancements && enhancements.length > 0 ? 
+          enhancements[0] : "with a unique design";
         
-        logger.info('Using improved hardcoded fallback prompt', { fallbackPrompt });
+        const fallbackArtStyle = enhancements && enhancements.length > 1 ? 
+          enhancements[1] : "digital art";
+        
+        // Create fallback prompt with the 4-element structure
+        fallbackPrompt = `${characterName} from ${franchise} ${fallbackTwist}, in the style of ${fallbackArtStyle}, high quality, detailed, sharp focus. Not blurry, not distorted, not poorly rendered.`;
+        
+        logger.info('Using structured hardcoded fallback prompt', { fallbackPrompt });
       }
       
       try {
