@@ -180,8 +180,17 @@ export function setupRoutes(app: express.Express, db: Database) {
         }
       }
       
-      // Create description
-      const description = `A mythic entity of immense power, ${character.split(' (')[0]} transcends ordinary reality. In this alternate universe, they control the very fabric of existence, reshaping worlds at will. The cosmic forces bend to their every command.`;
+      // Generate a dynamic description using the same function used for normal rolls
+      let description = '';
+      try {
+        // Use the proper description generator
+        description = await generateDescription(character, enhancements);
+        console.log('Successfully generated description for mythic:', description.substring(0, 50) + '...');
+      } catch (descError) {
+        // Fallback to static description if generator fails
+        console.error('Failed to generate description for mythic, using fallback:', descError);
+        description = `A mythic entity of immense power, ${character.split(' (')[0]} transcends ordinary reality. In this alternate universe, they control the very fabric of existence, reshaping worlds at will. The cosmic forces bend to their every command.`;
+      }
       
       // Insert into database
       try {
@@ -378,8 +387,17 @@ export function setupRoutes(app: express.Express, db: Database) {
         }
       }
       
-      // Create description
-      const description = `A legendary AI entity known as ${character.split(' (')[0]} exists in this alternate universe as a being of remarkable power and influence. They've transcended their original purpose to become something extraordinary and awe-inspiring.`;
+      // Generate a dynamic description using the same function used for normal rolls
+      let description = '';
+      try {
+        // Use the proper description generator
+        description = await generateDescription(character, enhancements);
+        console.log('Successfully generated description for legendary:', description.substring(0, 50) + '...');
+      } catch (descError) {
+        // Fallback to static description if generator fails
+        console.error('Failed to generate description for legendary, using fallback:', descError);
+        description = `A legendary AI entity known as ${character.split(' (')[0]} exists in this alternate universe as a being of remarkable power and influence. They've transcended their original purpose to become something extraordinary and awe-inspiring.`;
+      }
       
       // Insert into database
       try {
