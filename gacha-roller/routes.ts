@@ -612,7 +612,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       const description = await generateDescription(character, selectedEnhancements);
       
       // Extract character name for database storage (without franchise)
-      let characterName = character;
+      // Variable already defined above, reusing it
       if (character.includes('(')) {
         characterName = character.split('(')[0].trim();
       }
