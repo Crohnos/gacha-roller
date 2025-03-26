@@ -101,7 +101,47 @@ const LoginForm: React.FC<{ onClose: () => void, showForgotPassword: () => void 
           />
         </div>
         
-        <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* Buttons row - putting Login and Cancel in the same row */}
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={onClose}
+            style={{ 
+              padding: '10px 20px',
+              border: '1px solid var(--purple-700)',
+              borderRadius: '6px',
+              backgroundColor: 'rgba(31, 16, 50, 0.6)',
+              color: 'var(--gray-300)',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={isLoading}
+            style={{ 
+              padding: '10px 24px',
+              border: 'none',
+              borderRadius: '6px',
+              backgroundColor: 'var(--primary)',
+              color: 'white',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 0 10px rgba(192, 132, 252, 0.4)'
+            }}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
+          </button>
+        </div>
+        
+        {/* Forgot password link - moved below the buttons */}
+        <div style={{ marginTop: '16px', textAlign: 'center' }}>
           <button
             type="button"
             className="btn-text"
@@ -119,45 +159,6 @@ const LoginForm: React.FC<{ onClose: () => void, showForgotPassword: () => void 
           >
             Forgot password?
           </button>
-          
-          <div>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={onClose}
-              style={{ 
-                marginRight: '12px',
-                padding: '10px 20px',
-                border: '1px solid var(--purple-700)',
-                borderRadius: '6px',
-                backgroundColor: 'rgba(31, 16, 50, 0.6)',
-                color: 'var(--gray-300)',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={isLoading}
-              style={{ 
-                padding: '10px 24px',
-                border: 'none',
-                borderRadius: '6px',
-                backgroundColor: 'var(--primary)',
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 0 10px rgba(192, 132, 252, 0.4)'
-              }}
-            >
-              {isLoading ? 'Logging in...' : 'Login'}
-            </button>
-          </div>
         </div>
       </form>
     </div>
