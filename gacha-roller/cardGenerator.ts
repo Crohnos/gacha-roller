@@ -200,29 +200,51 @@ export async function generateImage(character: string, enhancements: string[], d
       return 'cards/generic-placeholder.png';
     }
     
-    // Use Claude to generate a Midjourney-style prompt with detailed character specifications
+    // Use Claude to generate a completely redesigned prompt that creates recognizable franchise-accurate characters
     let prompt = "";
     try {
-      const enhancementsText = enhancements.join(', ');
+      // Select just a few of the most relevant enhancements to avoid overwhelming the image
+      const relevantEnhancements = enhancements.slice(0, Math.min(5, enhancements.length));
+      const enhancementsText = relevantEnhancements.join(', ');
+      
+      // Brand new prompt engineering approach
       const promptGenerationPrompt = `
       <human>
-      You are an expert at creating Midjourney-style prompts for image generation. I need a prompt for Stable Diffusion to generate an image of a fictional character.
-      
+      I need you to create a highly specific prompt for Stable Diffusion to generate a character image. This is for a gacha game where we're having problems with characters being unrecognizable blobs or generic robots.
+
       Character: ${characterName}
       Franchise: ${franchise}
-      Enhancements to include: ${enhancementsText}
+      Key Style Elements: ${enhancementsText}
       
-      Story description: ${description}
+      CRITICAL REQUIREMENTS:
       
-      Please create a detailed prompt that will:
-      1. Make the character the main focus/subject of the image
-      2. Specify key physical characteristics of the character (appearance, outfit, distinctive features)
-      3. Include artistic elements like specific lighting, camera angle, and perspective
-      4. Organically incorporate the enhancements as integral parts of the character's design, not just separate elements
-      5. Draw inspiration from the story description for the character's pose, expression, and surrounding elements
-      6. Use Midjourney syntax and style (including parameters like --ar 16:9)
+      1. CHARACTER ACCURACY (HIGHEST PRIORITY):
+         - Make the character IMMEDIATELY recognizable to fans of the franchise
+         - Include their most iconic visual elements, outfit, and color scheme
+         - Specify their exact body type, face shape, distinctive features
+         - Include their canonical pose, expression, or stance if they have one
+         
+      2. ONE UNIQUE TWIST (choose only ONE):
+         - Add ONE unexpected element that alters the character without making them unrecognizable
+         - Examples: a cowboy hat, cybernetic arm, ethereal glow, fantasy armor, steampunk goggles, etc.
+         - The twist should complement, not overwhelm the character's iconic look
+         
+      3. HIGH QUALITY ART DIRECTION:
+         - Photo-realistic, high-detail render, 8K, film-quality
+         - Use specific camera lens types, lighting setup (dramatic rim lighting, etc.)
+         - Professional composition (portrait, 3/4 view, etc.)
+         - Specify a clear background that enhances the character
+         
+      RESPONSE FORMAT:
+      - Provide ONLY the prompt text with no explanations or additional text
+      - Use the format: "[Character description with exact visual details], [ONE unique twist element], [art style/quality terms], [camera/lighting details]"
+      - Do NOT use "--ar 16:9" or other MidJourney specific syntax
+      - Limit to 2-3 sentences maximum, but pack in maximum visual detail
       
-      VERY IMPORTANT: Your response should ONLY include the prompt text itself, with no explanations, introductions, or other text. The prompt should be 1-3 sentences maximum.
+      EXAMPLES FOR CLARITY:
+      Example 1: "Optimus Prime from Transformers, exact G1 design with red and blue paint scheme, tall humanoid robot with truck elements, iconic chest windows and face plate, wearing a medieval knight's helmet with plume, hyperrealistic 8K render, dramatic side lighting, professional studio photography, detailed mechanical background with depth of field"
+      
+      Example 2: "Darth Vader in full black armor and helmet with red lightsaber, imposing stance with cape billowing, wearing steampunk goggles and brass mechanical arm, photorealistic 8K, dramatic low angle shot, volumetric lighting with red and blue highlights, star destroyer bridge background"
       </human>
       
       <assistant>`;
@@ -231,7 +253,7 @@ export async function generateImage(character: string, enhancements: string[], d
         'https://api.anthropic.com/v1/messages',
         {
           model: "claude-3-haiku-20240307",
-          max_tokens: 250,
+          max_tokens: 300,
           messages: [
             { role: "user", content: promptGenerationPrompt }
           ]
@@ -248,17 +270,23 @@ export async function generateImage(character: string, enhancements: string[], d
       
       prompt = promptResponse.data.content[0].text.trim();
       
-      // Clean up the prompt if needed (remove any explanatory text Claude might have added)
+      // Clean up any explanatory text
       prompt = prompt
         .replace(/^(Here's|Here is|I've created) (a|the|an) (prompt|image prompt).*?:/i, '')
         .replace(/^prompt:/i, '')
         .trim();
+      
+      // Add standard quality boosters to ensure consistency
+      prompt += ", ultra high resolution, award winning photography, cinema quality, professional, hyper detailed, sharp focus";
         
-      logger.info('Successfully generated Claude prompt', { prompt });
+      logger.info('Successfully generated improved character prompt', { prompt });
     } catch (claudePromptError) {
-      // If Claude fails to generate a prompt, use a basic hardcoded one
-      logger.error('Failed to generate Claude prompt, using fallback', { error: claudePromptError });
-      prompt = `portrait of ${characterName} from ${franchise}, ${enhancements.join(', ')}, highly detailed, dramatic lighting, 8k --ar 16:9`;
+      // If Claude fails to generate a prompt, use a better hardcoded fallback
+      logger.error('Failed to generate character prompt, using improved fallback', { error: claudePromptError });
+      
+      // Create a more detailed fallback prompt
+      const fallbackEnhancements = enhancements.slice(0, 3).join(', ');
+      prompt = `${characterName} from ${franchise}, exact canon appearance with iconic outfit and features, with ${fallbackEnhancements}, photorealistic 8K render, dramatic studio lighting, professional photography, detailed background, sharp focus`;
     }
     
     logger.info('Claude-generated Midjourney-style prompt', { prompt });
@@ -276,11 +304,11 @@ export async function generateImage(character: string, enhancements: string[], d
           {
             inputs: prompt,
             parameters: {
-              num_inference_steps: 50,     // Increases detail and quality
-              guidance_scale: 7.5,         // Balances adherence to prompt vs. creativity
+              num_inference_steps: 80,     // Increased further for maximum quality
+              guidance_scale: 9.0,         // Increased to favor prompt adherence for character accuracy
               height: 576,                 // Sets 16:9 aspect ratio (exact ratio, multiples of 8)
               width: 1024,
-              negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured, deformed hands, extra fingers, missing fingers, fused fingers, too many fingers, elongated limbs, mutated body parts, disproportionate face, asymmetrical eyes, misshapen features, poor anatomy, out of frame, cropped image, duplicate characters, strange proportions, poorly rendered face"
+              negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured, deformed hands, extra fingers, missing fingers, fused fingers, too many fingers, elongated limbs, mutated body parts, disproportionate face, asymmetrical eyes, misshapen features, poor anatomy, out of frame, cropped image, duplicate characters, strange proportions, poorly rendered face, unrecognizable, blob, generic robot, generic android, wrong character, wrong franchise, wrong colors, featureless face, plain background"
             }
           },
           { 
@@ -344,15 +372,22 @@ export async function generateImage(character: string, enhancements: string[], d
         }
       }
       
-      // Generate a simpler fallback prompt with Claude
+      // Generate a better fallback prompt with Claude that focuses on character accuracy
       let fallbackPrompt = '';
       try {
+        // Create a simplified but still effective version of our main prompt
         const fallbackPromptRequest = `
         <human>
-        Create a very simple, concise image generation prompt for Stable Diffusion. 
-        I need an image of ${characterName}${franchise ? ` from ${franchise}` : ''}.
-        Make the character clearly recognizable. Include "${enhancements[0] || 'digital art'}" as a style element.
-        Keep it under 15 words total. No explanations or comments, just the prompt text.
+        Create a prompt for Stable Diffusion to generate an image of ${characterName} from ${franchise}.
+        
+        CRITICAL: The character MUST be immediately recognizable with their exact canonical appearance.
+        
+        Include these elements:
+        1. Specific visual details that make this character instantly recognizable (outfit, colors, distinctive features)
+        2. ONE interesting twist: ${enhancements[0] || 'alternate lighting'} 
+        3. High quality terms: photorealistic, detailed, professional
+        
+        Keep it concise but descriptive (2 sentences max). NO explanations, just the prompt text.
         </human>
         
         <assistant>`;
@@ -361,7 +396,7 @@ export async function generateImage(character: string, enhancements: string[], d
           'https://api.anthropic.com/v1/messages',
           {
             model: "claude-3-haiku-20240307",
-            max_tokens: 100,
+            max_tokens: 150,
             messages: [
               { role: "user", content: fallbackPromptRequest }
             ]
@@ -381,14 +416,16 @@ export async function generateImage(character: string, enhancements: string[], d
           .replace(/^prompt:/i, '')
           .trim();
         
-        logger.info('Created Claude-generated fallback prompt', { fallbackPrompt });
-      } catch (claudeError) {
-        // If Claude fails, use a basic hardcoded fallback
-        fallbackPrompt = franchise 
-          ? `portrait of ${characterName} from ${franchise}, ${enhancements[0] || 'digital art'}, detailed, high quality`
-          : `portrait of ${characterName}, ${enhancements[0] || 'digital art'}, detailed, high quality`;
+        // Add quality booster
+        fallbackPrompt += ", ultra detailed, 8K resolution, professional photography, sharp focus";
         
-        logger.info('Using hardcoded fallback prompt', { fallbackPrompt });
+        logger.info('Created improved fallback prompt', { fallbackPrompt });
+      } catch (claudeError) {
+        // If Claude fails, use an improved hardcoded fallback
+        const fallbackEnhancement = enhancements[0] || 'dramatic lighting';
+        fallbackPrompt = `${characterName} from ${franchise} with exact canonical appearance, distinctive features and iconic outfit, with ${fallbackEnhancement}, photorealistic, 8K resolution, professional studio photography, sharp focus`;
+        
+        logger.info('Using improved hardcoded fallback prompt', { fallbackPrompt });
       }
       
       try {
@@ -397,11 +434,20 @@ export async function generateImage(character: string, enhancements: string[], d
         logger.info('Trying with fallback model runwayml/stable-diffusion-v1-5');
         const fallbackResponse = await axios.post(
           'https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5',
-          { inputs: fallbackPrompt },
+          { 
+            inputs: fallbackPrompt,
+            parameters: {
+              num_inference_steps: 80,
+              guidance_scale: 10.0,  // Even higher on fallback for maximum character accuracy
+              height: 576,
+              width: 1024,
+              negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured, deformed hands, wrong character, unrecognizable, blob, generic robot, generic android, wrong franchise, wrong colors"
+            }
+          },
           { 
             headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}` },
             responseType: 'arraybuffer',
-            timeout: 20000
+            timeout: 30000  // Increased timeout for higher quality
           }
         );
         
