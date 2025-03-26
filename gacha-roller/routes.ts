@@ -44,11 +44,21 @@ export function setupRoutes(app: express.Express, db: Database) {
       ];
       const character = mythicCharacters[Math.floor(Math.random() * mythicCharacters.length)];
       
-      // Get AI-generated enhancements for mythic
+      // Extract character name and franchise for enhancement generation
+      const characterMatch = character.match(/^(.*?)\s*\((.*?)\)$/);
+      let characterName = character;
+      let franchise = '';
+      
+      if (characterMatch) {
+        characterName = characterMatch[1].trim();
+        franchise = characterMatch[2].trim();
+      }
+      
+      // Get character-specific AI-generated enhancements for mythic
       let enhancements: string[] = [];
       try {
-        // Use the new AI enhancement generator with more enhancements for mythic
-        enhancements = await generateEnhancements(40);
+        // Use the new AI enhancement generator with character context and more enhancements for mythic
+        enhancements = await generateEnhancements(40, characterName, franchise);
       } catch (enhError) {
         logger.error('Error generating AI enhancements for mythic, using fallback', { error: enhError });
         
@@ -234,11 +244,21 @@ export function setupRoutes(app: express.Express, db: Database) {
       ];
       const character = legendaryCharacters[Math.floor(Math.random() * legendaryCharacters.length)];
       
-      // Get AI-generated enhancements for legendary
+      // Extract character name and franchise for enhancement generation
+      const characterMatch = character.match(/^(.*?)\s*\((.*?)\)$/);
+      let characterName = character;
+      let franchise = '';
+      
+      if (characterMatch) {
+        characterName = characterMatch[1].trim();
+        franchise = characterMatch[2].trim();
+      }
+      
+      // Get character-specific AI-generated enhancements for legendary
       let enhancements: string[] = [];
       try {
-        // Use the new AI enhancement generator with more enhancements for legendary
-        enhancements = await generateEnhancements(30);
+        // Use the new AI enhancement generator with character context and more enhancements for legendary
+        enhancements = await generateEnhancements(30, characterName, franchise);
       } catch (enhError) {
         logger.error('Error generating AI enhancements for legendary, using fallback', { error: enhError });
         
@@ -556,11 +576,21 @@ export function setupRoutes(app: express.Express, db: Database) {
         console.log(`Selected ${normalizedRarity} character at index ${characterIndex}:`, character);
       }
       
-      // Get AI-generated enhancements
+      // Extract character name and franchise for enhancement generation
+      const characterMatch = character.match(/^(.*?)\s*\((.*?)\)$/);
+      let characterName = character;
+      let franchise = '';
+      
+      if (characterMatch) {
+        characterName = characterMatch[1].trim();
+        franchise = characterMatch[2].trim();
+      }
+      
+      // Get character-specific AI-generated enhancements
       let selectedEnhancements: string[] = [];
       try {
-        // Use the new AI enhancement generator
-        selectedEnhancements = await generateEnhancements(maxEnh);
+        // Use the new AI enhancement generator with character context
+        selectedEnhancements = await generateEnhancements(maxEnh, characterName, franchise);
       } catch (enhError) {
         logger.error('Error generating AI enhancements, using fallback', { error: enhError });
         

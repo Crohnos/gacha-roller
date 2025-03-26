@@ -117,7 +117,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             {card.description}
           </p>
           
-          {/* Enhancements */}
+          {/* Enhancements - Condensed Display */}
           {card.enhancements && card.enhancements.length > 0 && (
             <div className="mb-sm">
               <h4 className="section-title mb-sm" style={{ 
@@ -125,15 +125,18 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
                 textTransform: 'uppercase',
                 color: 'var(--gray-400)'
               }}>
-                Enhancements
+                Key Enhancements ({card.enhancements.length} total)
               </h4>
               
               <div style={{ 
                 display: 'flex', 
                 flexWrap: 'wrap',
-                gap: 'var(--space-xs)'
+                gap: 'var(--space-xs)',
+                maxHeight: '80px',
+                overflow: 'auto'
               }}>
-                {card.enhancements.map((enhancement, index) => (
+                {/* Show only first 5 enhancements */}
+                {card.enhancements.slice(0, 5).map((enhancement, index) => (
                   <span 
                     key={index}
                     className="enhancement-tag"
@@ -145,6 +148,17 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
                     {enhancement}
                   </span>
                 ))}
+                {card.enhancements.length > 5 && (
+                  <span 
+                    className="enhancement-tag"
+                    style={{
+                      color: rarityStyle.textColor,
+                      borderColor: rarityStyle.border.replace(/1px solid /, ''),
+                    }}
+                  >
+                    +{card.enhancements.length - 5} more
+                  </span>
+                )}
               </div>
             </div>
           )}

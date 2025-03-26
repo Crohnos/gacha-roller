@@ -34,7 +34,7 @@ export const rarityTiers = {
 };
 
 // Function to generate AI-based enhancements list (hundreds of options)
-export async function generateEnhancements(count: number = 10): Promise<string[]> {
+export async function generateEnhancements(count: number = 10, character?: string, franchise?: string): Promise<string[]> {
   try {
     // Check if we have API key
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -42,19 +42,46 @@ export async function generateEnhancements(count: number = 10): Promise<string[]
       return fallbackEnhancements.slice(0, count);
     }
     
-    const enhancementPrompt = `
-    <human>
-    Generate ${count} unique visual style enhancements for AI image generation. These should be artistic effects, styles, and visual modifications that can be applied to character portraits.
+    let enhancementPrompt;
     
-    Each enhancement should be 1-4 words, specific enough to guide image generation but concise.
-    
-    Format your response as a simple comma-separated list with no numbering, no quotes, and no explanations.
-    Example format: enhancement1, enhancement2, enhancement3
-    
-    Make the enhancements varied and creative, including art styles, lighting effects, color treatments, textures, and perspectives.
-    </human>
-    
-    <assistant>`;
+    if (character && franchise) {
+      // If character info is provided, generate character-appropriate enhancements
+      enhancementPrompt = `
+      <human>
+      Generate ${count} unique visual style enhancements for AI image generation of ${character} from ${franchise}.
+      
+      These should be artistic effects, styles, and visual modifications that would complement this specific character.
+      Focus on enhancements that would match the character's:
+      - Personality and powers
+      - Thematic elements from their franchise
+      - Iconic visual traits
+      - Era and technological/aesthetic context
+      
+      Each enhancement should be 1-4 words, specific enough to guide image generation but concise.
+      
+      Format your response as a simple comma-separated list with no numbering, no quotes, and no explanations.
+      Example format: enhancement1, enhancement2, enhancement3
+      
+      Make the enhancements varied and creative, but thematically appropriate for this character.
+      </human>
+      
+      <assistant>`;
+    } else {
+      // Generic enhancement generation
+      enhancementPrompt = `
+      <human>
+      Generate ${count} unique visual style enhancements for AI image generation. These should be artistic effects, styles, and visual modifications that can be applied to character portraits.
+      
+      Each enhancement should be 1-4 words, specific enough to guide image generation but concise.
+      
+      Format your response as a simple comma-separated list with no numbering, no quotes, and no explanations.
+      Example format: enhancement1, enhancement2, enhancement3
+      
+      Make the enhancements varied and creative, including art styles, lighting effects, color treatments, textures, and perspectives.
+      </human>
+      
+      <assistant>`;
+    }
     
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
@@ -84,11 +111,11 @@ export async function generateEnhancements(count: number = 10): Promise<string[]
       .map(e => e.toLowerCase())
       .slice(0, count);
     
-    logger.info('Generated enhancements list', { count: cleanedEnhancements.length });
+    logger.info('Generated enhancements list', { count: cleanedEnhancements.length, character });
     
     return cleanedEnhancements;
   } catch (error) {
-    logger.error('Error generating enhancements list', { error });
+    logger.error('Error generating enhancements list', { error, character });
     return fallbackEnhancements.slice(0, count);
   }
 }
@@ -653,14 +680,17 @@ export async function generateDescription(character: string, enhancements: strin
       return generateFallbackDescription(characterName, franchise, enhancements);
     }
     
-    const enhancementsText = enhancements.join(', ');
+    // No need to use enhancements directly in the story prompt
     const prompt = `
     <human>
-    Write a 200-300 word story about ${characterName}${franchise ? ` from ${franchise}` : ''} in an alternate universe where the following enhancements significantly alter their role, appearance, or backstory: ${enhancementsText || 'alternate universe elements'}. 
+    Write a 200-300 word story about ${characterName}${franchise ? ` from ${franchise}` : ''} in an alternate universe. 
     
-    Describe how these enhancements change the character and their world. Make it engaging and imaginative. If you're about to exceed your token limit, end the story gracefully rather than cutting off mid-sentence. 
+    Consider this character in a completely new dimension with different rules of reality. Focus on their core traits but reimagine them in unexpected ways. Make the story engaging and imaginative, possibly including themes of transformation, evolution, or interdimensional travel. If you're about to exceed your token limit, end the story gracefully rather than cutting off mid-sentence.
     
-    IMPORTANT: Your answer must ONLY include the story itself, with no introduction, explanation, or commentary.
+    IMPORTANT: 
+    1. Your answer must ONLY include the story itself, with no introduction, explanation, or commentary
+    2. Do NOT mention visual effects, art styles, or rendering techniques in the story
+    3. Instead, focus on the character's journey, abilities, and relationships in this alternate universe
     </human>
     
     <assistant>`;
