@@ -203,6 +203,22 @@ const LoadingScreen = () => {
               {randomMessage}...
             </motion.span>
           </div>
+          
+          {/* API delay message */}
+          <motion.p
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--gray-400)',
+              marginTop: '1.5rem',
+              maxWidth: '90%',
+              margin: '1.5rem auto 0'
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.5 }} // Show after a delay
+          >
+            We appreciate your patience. The image generation API may take longer during high-traffic periods.
+          </motion.p>
         </div>
       </motion.div>
     </div>

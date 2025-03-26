@@ -686,8 +686,17 @@ export function setupRoutes(app: express.Express, db: Database) {
     } catch (error: any) {
       // Check if this is a 503 error from Hugging Face
       const is503Error = error.response && error.response.status === 503;
+      // Check for timeout errors
+      const isTimeoutError = error.message && (error.message.includes('timeout') || error.code === 'ECONNABORTED');
       
-      if (is503Error) {
+      if (isTimeoutError) {
+        logger.warn('Card generation timed out', { user_id, username, error: error.message });
+        res.status(503).json({ 
+          error: 'The image generation API took longer than expected. Your card might still be processing. Please try again shortly.',
+          serverOverloaded: true,
+          isTimeout: true
+        });
+      } else if (is503Error) {
         logger.warn('Card generation affected by Hugging Face API overload', { user_id, username, status: 503 });
         res.status(503).json({ 
           error: 'Image servers are currently busy. Your card was created, but with a placeholder image. Try again in a few minutes!',

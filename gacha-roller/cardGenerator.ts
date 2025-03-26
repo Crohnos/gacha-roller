@@ -349,7 +349,7 @@ export async function generateImage(character: string, enhancements: string[], d
           { 
             headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}` },
             responseType: 'arraybuffer',
-            timeout: 30000 // Add 30 second timeout
+            timeout: 90000 // Extended to 90 seconds (1.5 minutes)
           }
         );
         
@@ -507,7 +507,7 @@ export async function generateImage(character: string, enhancements: string[], d
           { 
             headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}` },
             responseType: 'arraybuffer',
-            timeout: 30000  // Increased timeout for higher quality
+            timeout: 90000  // Extended to 90 seconds (1.5 minutes)
           }
         );
         

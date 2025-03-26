@@ -315,10 +315,18 @@ export const useStore = create<State>((set, get) => ({
       
       // Check if it's a 503 error (Service Unavailable)
       if (error.response && error.response.status === 503) {
-        set({ 
-          loading: false,
-          error: '⚠️ Image servers are currently busy. Your card may have a placeholder image. Please try again in a few minutes.'
-        });
+        // Check if it's a timeout error specifically
+        if (error.response.data && error.response.data.isTimeout) {
+          set({ 
+            loading: false,
+            error: '⏱️ The image generation took longer than expected. Your card might still be processing. Please try again shortly.'
+          });
+        } else {
+          set({ 
+            loading: false,
+            error: '⚠️ Image servers are currently busy. Your card may have a placeholder image. Please try again in a few minutes.'
+          });
+        }
         
         // Check if we got a card despite the 503 error
         if (error.response.data && error.response.data.card_id) {
