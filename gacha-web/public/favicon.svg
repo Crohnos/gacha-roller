@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <!-- Gacha capsule - top half -->
+  <path d="M8 16C8 8.8 14.8 3 24 3C33.2 3 40 8.8 40 16V20H8V16Z" fill="#A855F7" />
+  <!-- Gacha capsule - bottom half -->
+  <path d="M8 20H40V32C40 39.2 33.2 45 24 45C14.8 45 8 39.2 8 32V20Z" fill="#EC4899" />
+  <!-- Center line -->
+  <rect x="8" y="19" width="32" height="2" fill="#F9FAFB" />
+  <!-- Card/prize inside -->
+  <rect x="16" y="14" width="16" height="20" rx="2" fill="#F9FAFB" />
+  <!-- Card details -->
+  <rect x="18" y="17" width="12" height="1" fill="#A855F7" />
+  <rect x="18" y="20" width="12" height="1" fill="#A855F7" />
+  <rect x="18" y="23" width="12" height="1" fill="#A855F7" />
+  <rect x="18" y="30" width="6" height="2" rx="1" fill="#EC4899" />
+</svg>
