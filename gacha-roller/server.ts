@@ -43,6 +43,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
   
   // Handle OPTIONS method
   if (req.method === 'OPTIONS') {
@@ -89,7 +90,7 @@ app.use(session({
     secure: process.env.RENDER ? true : false, // Secure in production (Render uses HTTPS)
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: 'none' // Required for cross-domain cookie with secure=true
+    sameSite: process.env.RENDER ? 'none' : 'lax' // 'none' required for cross-domain cookie with secure=true in production
   }
 }));
 
@@ -213,7 +214,7 @@ async function startServer() {
     
     // Setup routes
     setupTempAuthRoutes(app); // Use temporary auth routes for development
-    // setupAuthRoutes(app, db); // Commented out until CORS issues are resolved
+    setupAuthRoutes(app, db); // Enable proper auth routes
     setupRoutes(app, db);
     
     // Add 404 handler
