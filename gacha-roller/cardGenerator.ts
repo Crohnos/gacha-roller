@@ -8,32 +8,93 @@ import logger from './logger';
 export const rarityTiers = {
   common: { 
     probability: 0.9, 
-    enhancements: 2, 
+    enhancements: 15, // Increased from 2
     characters: ['C-3PO (Star Wars)', 'R2-D2 (Star Wars)', 'Data (Star Trek)', 'TARS (Interstellar)', 'Baymax (Big Hero 6)'] 
   },
   rare: { 
     probability: 0.09, 
-    enhancements: 3, 
+    enhancements: 20, // Increased from 3
     characters: ['HAL 9000 (2001: A Space Odyssey)', 'T-800 (The Terminator)', 'WALL-E (WALL-E)', 'Optimus Prime (Transformers)', 'EVE (WALL-E)'] 
   },
   epic: { 
     probability: 0.009, 
-    enhancements: 4, 
+    enhancements: 25, // Increased from 4
     characters: ['Ultron (Marvel)', 'Vision (Marvel)', 'Sentinels (X-Men)', 'Hosts (Westworld)', 'Robocop (Robocop)'] 
   },
   legendary: { 
     probability: 0.001, 
-    enhancements: 5, 
+    enhancements: 30, // Increased from 5 
     characters: ['GLaDOS (Portal)', 'T-1000 (Terminator 2)', 'VIKI (I, Robot)', 'Ava (Ex Machina)', 'Samantha (Her)'] 
   },
   mythic: { 
     probability: 0.000001, 
-    enhancements: 6, 
+    enhancements: 40, // Increased from 6
     characters: ['Skynet (Terminator)', 'Agent Smith (The Matrix)', 'SHODAN (System Shock)', 'AM (I Have No Mouth and I Must Scream)', 'Wintermute (Neuromancer)'] 
   },
 };
 
-export const enhancementsList = [
+// Function to generate AI-based enhancements list (hundreds of options)
+export async function generateEnhancements(count: number = 10): Promise<string[]> {
+  try {
+    // Check if we have API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      logger.warn('No ANTHROPIC_API_KEY found, using fallback enhancements');
+      return fallbackEnhancements.slice(0, count);
+    }
+    
+    const enhancementPrompt = `
+    <human>
+    Generate ${count} unique visual style enhancements for AI image generation. These should be artistic effects, styles, and visual modifications that can be applied to character portraits.
+    
+    Each enhancement should be 1-4 words, specific enough to guide image generation but concise.
+    
+    Format your response as a simple comma-separated list with no numbering, no quotes, and no explanations.
+    Example format: enhancement1, enhancement2, enhancement3
+    
+    Make the enhancements varied and creative, including art styles, lighting effects, color treatments, textures, and perspectives.
+    </human>
+    
+    <assistant>`;
+    
+    const response = await axios.post(
+      'https://api.anthropic.com/v1/messages',
+      {
+        model: "claude-3-haiku-20240307",
+        max_tokens: 500,
+        messages: [
+          { role: "user", content: enhancementPrompt }
+        ]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        timeout: 15000
+      }
+    );
+    
+    const enhancementsList = response.data.content[0].text.trim().split(', ');
+    
+    // Clean up any formatting issues
+    const cleanedEnhancements = enhancementsList
+      .map(e => e.trim())
+      .filter(e => e.length > 0)
+      .map(e => e.toLowerCase())
+      .slice(0, count);
+    
+    logger.info('Generated enhancements list', { count: cleanedEnhancements.length });
+    
+    return cleanedEnhancements;
+  } catch (error) {
+    logger.error('Error generating enhancements list', { error });
+    return fallbackEnhancements.slice(0, count);
+  }
+}
+
+// Extensive fallback list for when API is unavailable
+export const fallbackEnhancements = [
   'inverted colors', 
   '3D rendering', 
   'cinematic perspective', 
@@ -44,7 +105,47 @@ export const enhancementsList = [
   'holographic overlay',
   'retro pixelated style',
   'cosmic background',
-  'digital glitch effect'
+  'digital glitch effect',
+  'blueprint-style rendering',
+  'oil painting texture',
+  'watercolor wash',
+  'vaporwave aesthetics',
+  'duotone filter',
+  'infrared photography',
+  'low-poly geometry',
+  'high contrast noir',
+  'dystopian atmosphere',
+  'utopian luminescence',
+  'isometric projection',
+  'wireframe overlay',
+  'film grain texture',
+  'neon synthwave',
+  'art deco styling',
+  'graffiti elements',
+  'photorealistic rendering',
+  'anime-inspired',
+  'cubist abstraction',
+  'baroque ornamentation',
+  'minimalist composition',
+  'thermal imaging',
+  'rusted metal textures',
+  'iridescent sheen',
+  'dichroic filter',
+  'polarized light',
+  'tilt-shift focus',
+  'double exposure',
+  'retrofuturistic',
+  'brutalist architecture',
+  'biomechanical fusion',
+  'prismatic refraction',
+  'cybernetic augmentation',
+  'quantum visualization',
+  'glitch corruption',
+  'ascii art overlay',
+  'binary code patterns',
+  'fractal geometry',
+  'holographic prismatic',
+  'chiaroscuro lighting'
 ];
 
 // Image Generation (Stable Diffusion with Claude-generated Midjourney-style prompts)
@@ -72,7 +173,7 @@ export async function generateImage(character: string, enhancements: string[], d
       return 'cards/generic-placeholder.png';
     }
     
-    // Use Claude to generate a Midjourney-style prompt
+    // Use Claude to generate a Midjourney-style prompt with detailed character specifications
     let prompt = "";
     try {
       const enhancementsText = enhancements.join(', ');
@@ -88,10 +189,11 @@ export async function generateImage(character: string, enhancements: string[], d
       
       Please create a detailed prompt that will:
       1. Make the character the main focus/subject of the image
-      2. Include artistic elements like lighting and perspective
-      3. Incorporate the enhancements listed above
-      4. Draw inspiration from the story description
-      5. Use Midjourney syntax and style (including parameters like --ar 16:9)
+      2. Specify key physical characteristics of the character (appearance, outfit, distinctive features)
+      3. Include artistic elements like specific lighting, camera angle, and perspective
+      4. Organically incorporate the enhancements as integral parts of the character's design, not just separate elements
+      5. Draw inspiration from the story description for the character's pose, expression, and surrounding elements
+      6. Use Midjourney syntax and style (including parameters like --ar 16:9)
       
       VERY IMPORTANT: Your response should ONLY include the prompt text itself, with no explanations, introductions, or other text. The prompt should be 1-3 sentences maximum.
       </human>
@@ -151,7 +253,7 @@ export async function generateImage(character: string, enhancements: string[], d
               guidance_scale: 7.5,         // Balances adherence to prompt vs. creativity
               height: 576,                 // Sets 16:9 aspect ratio (exact ratio, multiples of 8)
               width: 1024,
-              negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured"
+              negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured, deformed hands, extra fingers, missing fingers, fused fingers, too many fingers, elongated limbs, mutated body parts, disproportionate face, asymmetrical eyes, misshapen features, poor anatomy, out of frame, cropped image, duplicate characters, strange proportions, poorly rendered face"
             }
           },
           { 
@@ -645,7 +747,7 @@ export async function generateCss() {
 import type { checkPityUpgrade as CheckPityUpgradeType } from './pityTracker';
 
 // Determine rarity based on probabilities and pity system
-export function determineRarity(userId?: string) {
+export async function determineRarity(userId?: string) {
   // Standard rarity determination without pity
   const rand = Math.random();
   let cumulative = 0;

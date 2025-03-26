@@ -4,7 +4,8 @@ import { Database } from 'sqlite';
 import { 
   determineRarity, 
   rarityTiers, 
-  enhancementsList, 
+  fallbackEnhancements, 
+  generateEnhancements,
   generateImage, 
   generateDescription, 
   generateCss 
@@ -43,15 +44,28 @@ export function setupRoutes(app: express.Express, db: Database) {
       ];
       const character = mythicCharacters[Math.floor(Math.random() * mythicCharacters.length)];
       
-      // Get list of enhancements
-      const enhancements = [
-        'cosmic background',
-        'digital glitch effect',
-        'neon glow',
-        'inverted colors',
-        'cinematic perspective',
-        'holographic overlay'
-      ];
+      // Get AI-generated enhancements for mythic
+      let enhancements: string[] = [];
+      try {
+        // Use the new AI enhancement generator with more enhancements for mythic
+        enhancements = await generateEnhancements(40);
+      } catch (enhError) {
+        logger.error('Error generating AI enhancements for mythic, using fallback', { error: enhError });
+        
+        // Fallback to static list for mythic
+        enhancements = [
+          'cosmic background',
+          'digital glitch effect',
+          'neon glow',
+          'inverted colors',
+          'cinematic perspective',
+          'holographic overlay',
+          'quantum flux',
+          'dimensional rift',
+          'omniscient gaze',
+          'reality distortion'
+        ];
+      }
       
       // Generate fake ID and timestamp
       const card_id = Math.floor(Math.random() * 1000) + 900;
@@ -220,14 +234,27 @@ export function setupRoutes(app: express.Express, db: Database) {
       ];
       const character = legendaryCharacters[Math.floor(Math.random() * legendaryCharacters.length)];
       
-      // Get list of enhancements
-      const enhancements = [
-        'cosmic background',
-        'digital glitch effect',
-        'neon glow',
-        'cinematic perspective',
-        'holographic overlay'
-      ];
+      // Get AI-generated enhancements for legendary
+      let enhancements: string[] = [];
+      try {
+        // Use the new AI enhancement generator with more enhancements for legendary
+        enhancements = await generateEnhancements(30);
+      } catch (enhError) {
+        logger.error('Error generating AI enhancements for legendary, using fallback', { error: enhError });
+        
+        // Fallback to static list for legendary
+        enhancements = [
+          'cosmic background',
+          'digital glitch effect',
+          'neon glow',
+          'cinematic perspective',
+          'holographic overlay',
+          'temporal distortion',
+          'ethereal glow',
+          'chromatic aberration',
+          'luminescent aura'
+        ];
+      }
       
       // Generate fake ID and timestamp
       const card_id = Math.floor(Math.random() * 1000) + 500;
@@ -476,7 +503,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Random determination as fallback
       else {
         console.log('No valid forced rarity found, determining randomly');
-        rarity = determineRarity();
+        rarity = await determineRarity(user_id);
       }
       console.log('Rarity after determination:', rarity);
       
@@ -529,14 +556,23 @@ export function setupRoutes(app: express.Express, db: Database) {
         console.log(`Selected ${normalizedRarity} character at index ${characterIndex}:`, character);
       }
       
-      // Get random enhancements
-      const selectedEnhancements: string[] = [];
-      const availableEnhancements = [...enhancementsList];
-      
-      for (let i = 0; i < maxEnh && availableEnhancements.length > 0; i++) {
-        const randIndex = Math.floor(Math.random() * availableEnhancements.length);
-        selectedEnhancements.push(availableEnhancements[randIndex]);
-        availableEnhancements.splice(randIndex, 1);
+      // Get AI-generated enhancements
+      let selectedEnhancements: string[] = [];
+      try {
+        // Use the new AI enhancement generator
+        selectedEnhancements = await generateEnhancements(maxEnh);
+      } catch (enhError) {
+        logger.error('Error generating AI enhancements, using fallback', { error: enhError });
+        
+        // Fallback to random selection from static list
+        const availableEnhancements = [...fallbackEnhancements];
+        selectedEnhancements = [];
+        
+        for (let i = 0; i < maxEnh && availableEnhancements.length > 0; i++) {
+          const randIndex = Math.floor(Math.random() * availableEnhancements.length);
+          selectedEnhancements.push(availableEnhancements[randIndex]);
+          availableEnhancements.splice(randIndex, 1);
+        }
       }
       
       // Log the card details before generation
