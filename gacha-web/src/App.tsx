@@ -21,10 +21,10 @@ const App = () => {
   } = useStore();
   
   const [showCollection, setShowCollection] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
   
-  // Initialize local storage user and fetch collection on mount
+  // Initialize local storage and fetch collection on mount
   useEffect(() => {
-    // Create a temporary user ID if needed and fetch data
     const initializeLocalData = async () => {
       try {
         // Initialize collection from localStorage
@@ -40,7 +40,31 @@ const App = () => {
     initializeLocalData();
   }, [fetchCollection, fetchPityInfo]);
   
-  // No need to check for reset token since we removed auth
+  // Set up timer to display time left for session
+  useEffect(() => {
+    const updateTimeLeft = () => {
+      const timestamp = localStorage.getItem('gacha_collection_timestamp');
+      if (!timestamp) return;
+      
+      const expiryTime = parseInt(timestamp) + 24 * 60 * 60 * 1000; // 24 hours
+      const now = Date.now();
+      const diff = expiryTime - now;
+      
+      if (diff <= 0) {
+        setTimeLeft('Expired');
+        return;
+      }
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft(`${hours}h ${minutes}m`);
+    };
+    
+    updateTimeLeft();
+    const interval = setInterval(updateTimeLeft, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, []);
   
   return (
     <div className="container">
@@ -61,7 +85,7 @@ const App = () => {
             
             {/* Collection expires in 24 hours */}
             <small style={{ opacity: 0.7 }}>
-              Collection stored for 24 hours
+              Session: {timeLeft}
             </small>
           </div>
         </div>
@@ -279,8 +303,6 @@ const App = () => {
           &copy; 2025 Gacha Roller · All rights reserved
         </p>
       </footer>
-      
-      {/* Auth removed - collection stored in localStorage */}
     </div>
   );
 };

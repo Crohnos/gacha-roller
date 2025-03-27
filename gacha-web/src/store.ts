@@ -20,34 +20,22 @@ type Card = {
   css: string;
   rarity: string;
   character: string;
-  enhancements: string[];
+  enhancements?: string[];
   pity_info?: PityInfo;
-};
-
-type User = {
-  userId: string;
-  username: string;
-  email?: string;
 };
 
 interface State {
   loading: boolean;
   card: Card | null;
   collection: Card[];
-  user: User | null;
   error: string | null;
   lastPityInfo: PityInfo | null;
-  isAuthenticated: boolean;
   
   setLoading: (val: boolean) => void;
-  
-  // Game methods
   rollCard: (forcedRarity?: string) => Promise<void>;
   fetchCollection: () => void;
   fetchPityInfo: () => Promise<void>;
   clearCard: () => void;
-  
-  // Collection management methods
   addCardToCollection: (card: Card) => void;
   clearLocalData: () => void;
 }
@@ -55,9 +43,11 @@ interface State {
 // API base URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-// Configure axios defaults
-axios.defaults.withCredentials = true; // Always send credentials
-axios.defaults.headers.common['Content-Type'] = 'application/json';
+// Constants for localStorage
+const COLLECTION_KEY = 'gacha_collection';
+const USER_ID_KEY = 'gacha_user_id';
+const COLLECTION_TIMESTAMP_KEY = 'gacha_collection_timestamp';
+const SESSION_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Define rarity tiers to match backend values exactly
 const RARITIES = {
@@ -67,12 +57,6 @@ const RARITIES = {
   legendary: 'legendary',
   mythic: 'mythic'
 };
-
-// Constants for localStorage
-const COLLECTION_KEY = 'gacha_collection';
-const USER_ID_KEY = 'gacha_user_id';
-const COLLECTION_TIMESTAMP_KEY = 'gacha_collection_timestamp';
-const SESSION_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Helper function to generate a random user ID
 const generateUserId = () => {
@@ -92,10 +76,8 @@ export const useStore = create<State>((set, get) => ({
   loading: false,
   card: null,
   collection: [],
-  user: null,
   error: null,
   lastPityInfo: null,
-  isAuthenticated: true, // Always authenticated in this simplified version
   
   setLoading: (val) => set({ loading: val }),
   
@@ -155,28 +137,9 @@ export const useStore = create<State>((set, get) => ({
           payload.forced_rarity = 'mythic';
           console.log('Forcing mythic rarity as fallback');
         }
-        
-        // Confirm what we're sending
-        console.log('Payload after adding forced_rarity:', payload);
       }
-      
-      // Debug log the full payload
-      console.log('API payload:', payload);
       
       const response = await axios.post(`${API_URL}/roll`, payload);
-      
-      // Debug the response
-      console.log('API Response:', response.data);
-      console.log('Response rarity:', response.data.rarity);
-      
-      if (forcedRarity && response.data.rarity !== forcedRarity.toLowerCase()) {
-        console.error(`WARNING: Requested rarity "${forcedRarity}" but got "${response.data.rarity}" instead!`);
-        
-        // Debug info if available
-        if (response.data.debug_info) {
-          console.log('Server debug info:', response.data.debug_info);
-        }
-      }
       
       // Store pity info separately so it persists even when card is cleared
       const pityInfo = response.data.pity_info || null;
@@ -187,8 +150,7 @@ export const useStore = create<State>((set, get) => ({
       set({ 
         card: response.data,
         loading: false,
-        lastPityInfo: pityInfo,
-        user: { userId, username, email: '' }
+        lastPityInfo: pityInfo
       });
     } catch (error: any) {
       console.error('Error rolling card:', error);
@@ -276,7 +238,6 @@ export const useStore = create<State>((set, get) => ({
       // If we got valid pity data, update the store
       if (response.data) {
         set({ lastPityInfo: response.data });
-        console.log('Fetched pity info:', response.data);
       }
     } catch (error: any) {
       console.error('Error fetching pity info:', error);
@@ -295,18 +256,13 @@ export const useStore = create<State>((set, get) => ({
     set({
       collection: [],
       lastPityInfo: null,
-      card: null,
-      user: null
+      card: null
     });
     
     // Generate a new user ID
     const userId = generateUserId();
-    const username = 'guest_user';
-    
     localStorage.setItem(USER_ID_KEY, userId);
     localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
     localStorage.setItem(COLLECTION_KEY, JSON.stringify([]));
-    
-    set({ user: { userId, username, email: '' } });
   }
 }));

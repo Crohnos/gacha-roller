@@ -6,11 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import cors from 'cors';
-import session from 'express-session';
-import cookieParser from 'cookie-parser';
 import { setupRoutes } from './routes';
-import { setupAuthRoutes } from './authRoutes';
-import { setupTempAuthRoutes } from './tempAuth';
 import logger from './logger';
 
 // Load environment variables
@@ -40,7 +36,6 @@ app.use((req, res, next) => {
   }
   
   // Set other CORS headers
-  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Max-Age', '86400'); // 24 hours
@@ -76,42 +71,11 @@ app.use((req, res, next) => {
 // Standard middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
 // We're using a custom CORS implementation above, so we don't need the cors middleware
 // This comment is kept for reference in case we need to revert
 
-// Session handling
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'gacha-session-secret',
-  resave: true, // Changed to true for development to ensure session updates are saved
-  saveUninitialized: true, // Changed to true for development to create session for all requests
-  cookie: {
-    secure: process.env.RENDER ? true : false, // Secure in production (Render uses HTTPS)
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: process.env.RENDER ? 'none' : 'lax' // 'none' required for cross-domain cookie with secure=true in production
-  }
-}));
-
-// Debug middleware to log each incoming request body and session
-app.use((req, res, next) => {
-  if (req.method === 'POST') {
-    console.log(`REQUEST BODY for ${req.path}:`, req.body);
-  }
-  
-  // Log session data for all auth-related requests
-  if (req.path.startsWith('/auth')) {
-    console.log(`SESSION DATA for ${req.path}:`, {
-      sessionID: req.sessionID,
-      session: req.session,
-      cookies: req.cookies,
-      headers: req.headers
-    });
-  }
-  
-  next();
-});
+// Static routes for cards
 app.use('/images', express.static(cardsDir));
 app.use('/cards', express.static(cardsDir));
 
@@ -130,19 +94,11 @@ async function initializeDb() {
     driver: sqlite3.Database
   });
   
-  // Import and run migrations in development
-  if (process.env.NODE_ENV !== 'production') {
-    const { createTestUser } = require('./migrations/create-test-user');
-    await createTestUser(db);
-  }
-  
   // Create tables if they don't exist
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       user_id TEXT PRIMARY KEY,
       username TEXT NOT NULL,
-      email TEXT UNIQUE,
-      password_hash TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       last_login TEXT
     );
@@ -155,24 +111,6 @@ async function initializeDb() {
       css TEXT,
       rarity TEXT,
       character TEXT,
-      FOREIGN KEY (user_id) REFERENCES users(user_id)
-    );
-    
-    CREATE TABLE IF NOT EXISTS reset_tokens (
-      token_id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      token TEXT UNIQUE NOT NULL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      expires_at TEXT NOT NULL,
-      used INTEGER DEFAULT 0,
-      FOREIGN KEY (user_id) REFERENCES users(user_id)
-    );
-    
-    CREATE TABLE IF NOT EXISTS sessions (
-      session_id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      expires_at TEXT NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(user_id)
     );
   `);
@@ -188,10 +126,6 @@ async function startServer() {
     
     // Setup health check endpoint
     app.get('/health', (req, res) => {
-      // Set explicit CORS headers for this endpoint
-      res.header('Access-Control-Allow-Origin', 'https://gacha-web.onrender.com');
-      res.header('Access-Control-Allow-Credentials', 'true');
-      
       res.status(200).json({ 
         status: 'ok',
         uptime: process.uptime(),
@@ -202,20 +136,13 @@ async function startServer() {
     
     // Add a CORS test endpoint
     app.get('/cors-test', (req, res) => {
-      // Set explicit CORS headers for this endpoint
-      res.header('Access-Control-Allow-Origin', 'https://gacha-web.onrender.com');
-      res.header('Access-Control-Allow-Credentials', 'true');
-      
       res.status(200).json({
         message: 'CORS is working!',
         origin: req.headers.origin || 'unknown'
       });
     });
     
-    // Setup routes
-    // Disabled auth routes to simplify the application
-    // setupTempAuthRoutes(app);
-    // setupAuthRoutes(app, db);
+    // Setup routes - no auth required
     setupRoutes(app, db);
     
     // Add 404 handler

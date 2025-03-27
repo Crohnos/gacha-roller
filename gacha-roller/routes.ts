@@ -11,7 +11,6 @@ import {
   generateCss 
 } from './cardGenerator';
 import logger from './logger';
-import { isAuthenticated, attachUser } from './authMiddleware';
 
 // Create a function to setup routes with access to the initialized DB
 export function setupRoutes(app: express.Express, db: Database) {
