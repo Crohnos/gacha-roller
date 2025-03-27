@@ -6,8 +6,6 @@ import LoadingScreen from './components/LoadingScreen';
 import CardDisplay from './components/CardDisplay';
 import Collection from './components/Collection';
 import PityDisplay from './components/PityDisplay';
-import AuthModal from './components/AuthModal';
-import UserMenu from './components/UserMenu';
 
 const App = () => {
   const { 
@@ -19,49 +17,30 @@ const App = () => {
     fetchCollection, 
     fetchPityInfo, 
     clearCard, 
-    lastPityInfo, 
-    isAuthenticated,
-    checkAuth 
+    lastPityInfo 
   } = useStore();
   
   const [showCollection, setShowCollection] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authView, setAuthView] = useState<'login' | 'register' | 'forgotPassword'>('login');
-  const [resetToken, setResetToken] = useState<string | null>(null);
   
-  // Check authentication on mount with error handling
+  // Initialize local storage user and fetch collection on mount
   useEffect(() => {
-    // Add try/catch to prevent unhandled promise rejection
-    const checkUserAuth = async () => {
+    // Create a temporary user ID if needed and fetch data
+    const initializeLocalData = async () => {
       try {
-        await checkAuth();
+        // Initialize collection from localStorage
+        fetchCollection();
+        
+        // Fetch pity info from backend
+        await fetchPityInfo();
       } catch (error) {
-        console.error('Failed to check authentication status:', error);
-        // Continue even if auth check fails - user will be treated as not logged in
+        console.error('Failed to initialize local data:', error);
       }
     };
     
-    checkUserAuth();
-  }, [checkAuth]);
+    initializeLocalData();
+  }, [fetchCollection, fetchPityInfo]);
   
-  // Fetch the collection and pity info on mount after authentication
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCollection();
-      fetchPityInfo();
-    }
-  }, [isAuthenticated, fetchCollection, fetchPityInfo]);
-  
-  // Check for reset token in URL
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const token = queryParams.get('token');
-    
-    if (token) {
-      setResetToken(token);
-      setShowAuthModal(true);
-    }
-  }, []);
+  // No need to check for reset token since we removed auth
   
   return (
     <div className="container">
@@ -73,21 +52,17 @@ const App = () => {
           </h1>
           
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            {isAuthenticated && (
-              <button
-                className="btn-secondary"
-                onClick={() => setShowCollection(true)}
-              >
-                My Collection ({collection.length})
-              </button>
-            )}
+            <button
+              className="btn-secondary"
+              onClick={() => setShowCollection(true)}
+            >
+              My Collection ({collection.length})
+            </button>
             
-            <UserMenu 
-              onShowLogin={() => {
-                setAuthView('login');
-                setShowAuthModal(true);
-              }} 
-            />
+            {/* Collection expires in 24 hours */}
+            <small style={{ opacity: 0.7 }}>
+              Collection stored for 24 hours
+            </small>
           </div>
         </div>
       </header>
@@ -137,18 +112,12 @@ const App = () => {
               whileTap={{ scale: 0.98 }}
               disabled={loading}
               onClick={() => {
-                if (!isAuthenticated) {
-                  setAuthView('login');
-                  setShowAuthModal(true);
-                  return;
-                }
-                
                 // Call rollCard with no parameters for random rarity
                 console.log('Roll button clicked - using random rarity');
                 rollCard();
               }}
             >
-              {loading ? 'Rolling...' : isAuthenticated ? 'Roll a Card' : 'Login to Roll'}
+              {loading ? 'Rolling...' : 'Roll a Card'}
             </motion.button>
             
             {/* Pity display - always show if we have info */}
@@ -311,13 +280,7 @@ const App = () => {
         </p>
       </footer>
       
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal}
-        initialView={authView}
-        onClose={() => setShowAuthModal(false)}
-        resetToken={resetToken || undefined}
-      />
+      {/* Auth removed - collection stored in localStorage */}
     </div>
   );
 };

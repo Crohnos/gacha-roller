@@ -213,8 +213,9 @@ async function startServer() {
     });
     
     // Setup routes
-    setupTempAuthRoutes(app); // Use temporary auth routes for development
-    setupAuthRoutes(app, db); // Enable proper auth routes
+    // Disabled auth routes to simplify the application
+    // setupTempAuthRoutes(app);
+    // setupAuthRoutes(app, db);
     setupRoutes(app, db);
     
     // Add 404 handler

@@ -41,20 +41,15 @@ interface State {
   
   setLoading: (val: boolean) => void;
   
-  // Authentication methods
-  register: (username: string, email: string, password: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
-  forgotPassword: (email: string) => Promise<void>;
-  verifyResetToken: (token: string) => Promise<boolean>;
-  resetPassword: (token: string, newPassword: string) => Promise<void>;
-  
   // Game methods
   rollCard: (forcedRarity?: string) => Promise<void>;
-  fetchCollection: () => Promise<void>;
+  fetchCollection: () => void;
   fetchPityInfo: () => Promise<void>;
   clearCard: () => void;
+  
+  // Collection management methods
+  addCardToCollection: (card: Card) => void;
+  clearLocalData: () => void;
 }
 
 // API base URL
@@ -73,6 +68,26 @@ const RARITIES = {
   mythic: 'mythic'
 };
 
+// Constants for localStorage
+const COLLECTION_KEY = 'gacha_collection';
+const USER_ID_KEY = 'gacha_user_id';
+const COLLECTION_TIMESTAMP_KEY = 'gacha_collection_timestamp';
+const SESSION_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+// Helper function to generate a random user ID
+const generateUserId = () => {
+  return 'user_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+};
+
+// Helper function to check if the collection has expired
+const isCollectionExpired = () => {
+  const timestamp = localStorage.getItem(COLLECTION_TIMESTAMP_KEY);
+  if (!timestamp) return true;
+  
+  const expiryTime = parseInt(timestamp) + SESSION_EXPIRY;
+  return Date.now() > expiryTime;
+};
+
 export const useStore = create<State>((set, get) => ({
   loading: false,
   card: null,
@@ -80,168 +95,32 @@ export const useStore = create<State>((set, get) => ({
   user: null,
   error: null,
   lastPityInfo: null,
-  isAuthenticated: false,
+  isAuthenticated: true, // Always authenticated in this simplified version
   
   setLoading: (val) => set({ loading: val }),
   
-  // Authentication methods
-  register: async (username, email, password) => {
-    set({ loading: true, error: null });
+  // Get or create a user ID for local storage
+  getUserId: () => {
+    let userId = localStorage.getItem(USER_ID_KEY);
     
-    try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
-        username,
-        email,
-        password
-      }, { withCredentials: true });
-      
-      set({
-        user: response.data.user,
-        isAuthenticated: true,
-        loading: false
-      });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Registration failed';
-      set({ loading: false, error: errorMessage });
-      throw new Error(errorMessage);
+    // Check if userId exists and collection hasn't expired
+    if (!userId || isCollectionExpired()) {
+      // Generate a new userId and reset collection timestamp
+      userId = generateUserId();
+      localStorage.setItem(USER_ID_KEY, userId);
+      localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
+      localStorage.setItem(COLLECTION_KEY, JSON.stringify([]));
     }
-  },
-  
-  login: async (email, password) => {
-    set({ loading: true, error: null });
     
-    try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        password
-      }, { withCredentials: true });
-      
-      set({
-        user: response.data.user,
-        isAuthenticated: true,
-        loading: false
-      });
-      
-      // Fetch user pity info after login
-      get().fetchPityInfo();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Login failed';
-      set({ loading: false, error: errorMessage });
-      throw new Error(errorMessage);
-    }
-  },
-  
-  logout: async () => {
-    set({ loading: true });
-    
-    try {
-      await axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true });
-      
-      set({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        card: null,
-        collection: [],
-        lastPityInfo: null
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Even if API call fails, we still reset local state
-      set({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        card: null,
-        collection: [],
-        lastPityInfo: null
-      });
-    }
-  },
-  
-  checkAuth: async () => {
-    try {
-      // Add a small delay to ensure server is ready to handle requests
-      const response = await axios.get(`${API_URL}/auth/check-session`, { 
-        withCredentials: true,
-        // Increase timeout to avoid quick failures
-        timeout: 5000
-      });
-      
-      console.log('Auth check response:', response.data);
-      
-      if (response.data && response.data.isAuthenticated) {
-        set({
-          user: response.data.user,
-          isAuthenticated: true
-        });
-        
-        // Fetch user data after authentication
-        get().fetchPityInfo();
-        get().fetchCollection();
-      } else {
-        // Clear authentication state if not authenticated
-        set({ isAuthenticated: false, user: null });
-      }
-    } catch (error) {
-      console.error('Check auth error:', error);
-      // Don't throw error, just set state to not authenticated
-      set({ isAuthenticated: false, user: null });
-    }
-  },
-  
-  forgotPassword: async (email) => {
-    set({ loading: true, error: null });
-    
-    try {
-      await axios.post(`${API_URL}/auth/forgot-password`, { email });
-      set({ loading: false });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to process request';
-      set({ loading: false, error: errorMessage });
-      throw new Error(errorMessage);
-    }
-  },
-  
-  verifyResetToken: async (token) => {
-    set({ loading: true, error: null });
-    
-    try {
-      const response = await axios.get(`${API_URL}/auth/verify-reset-token?token=${token}`);
-      set({ loading: false });
-      return response.data.valid;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Invalid token';
-      set({ loading: false, error: errorMessage });
-      throw new Error(errorMessage);
-    }
-  },
-  
-  resetPassword: async (token, newPassword) => {
-    set({ loading: true, error: null });
-    
-    try {
-      await axios.post(`${API_URL}/auth/reset-password`, { token, newPassword });
-      set({ loading: false });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to reset password';
-      set({ loading: false, error: errorMessage });
-      throw new Error(errorMessage);
-    }
+    return userId;
   },
   
   rollCard: async (forcedRarity?: string) => {
-    const { user, isAuthenticated } = get();
     set({ loading: true, error: null });
     
-    // Check authentication
-    if (!isAuthenticated || !user) {
-      set({ 
-        loading: false, 
-        error: 'You must be logged in to roll cards.' 
-      });
-      return;
-    }
+    // Get or create user ID for local storage
+    const userId = get().getUserId();
+    const username = 'guest_user';
     
     try {
       // Add the forced rarity parameter if specified
@@ -250,8 +129,8 @@ export const useStore = create<State>((set, get) => ({
         username: string; 
         forced_rarity?: string 
       } = {
-        user_id: user.userId,
-        username: user.username
+        user_id: userId,
+        username
       };
       
       // Add the forced rarity if provided
@@ -284,7 +163,7 @@ export const useStore = create<State>((set, get) => ({
       // Debug log the full payload
       console.log('API payload:', payload);
       
-      const response = await axios.post(`${API_URL}/roll`, payload, { withCredentials: true });
+      const response = await axios.post(`${API_URL}/roll`, payload);
       
       // Debug the response
       console.log('API Response:', response.data);
@@ -302,14 +181,15 @@ export const useStore = create<State>((set, get) => ({
       // Store pity info separately so it persists even when card is cleared
       const pityInfo = response.data.pity_info || null;
       
+      // Add the new card to local collection
+      get().addCardToCollection(response.data);
+      
       set({ 
         card: response.data,
         loading: false,
-        lastPityInfo: pityInfo
+        lastPityInfo: pityInfo,
+        user: { userId, username, email: '' }
       });
-      
-      // After rolling a card, refresh the collection
-      get().fetchCollection();
     } catch (error: any) {
       console.error('Error rolling card:', error);
       
@@ -331,6 +211,7 @@ export const useStore = create<State>((set, get) => ({
         // Check if we got a card despite the 503 error
         if (error.response.data && error.response.data.card_id) {
           set({ card: error.response.data });
+          get().addCardToCollection(error.response.data);
         }
       } else {
         set({ 
@@ -341,54 +222,56 @@ export const useStore = create<State>((set, get) => ({
     }
   },
   
-  fetchCollection: async () => {
-    const { user, isAuthenticated } = get();
-    
-    // Check authentication
-    if (!isAuthenticated || !user) {
-      // Silently return for collection since it's loaded on app startup
-      return;
-    }
-    
+  // Load collection from localStorage
+  fetchCollection: () => {
     try {
-      const response = await axios.get(`${API_URL}/collection/${user.userId}`, { withCredentials: true });
-      set({ collection: response.data });
-    } catch (error: any) {
-      console.error('Error fetching collection:', error);
-      
-      // Handle 401 Unauthorized
-      if (error.response && error.response.status === 401) {
-        set({ isAuthenticated: false, user: null });
+      // Check if collection has expired
+      if (isCollectionExpired()) {
+        // Clear expired collection data
+        localStorage.removeItem(COLLECTION_KEY);
+        localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
+        set({ collection: [] });
         return;
       }
       
-      // Check if it's a 503 error (Service Unavailable)
-      if (error.response && error.response.status === 503) {
-        set({ 
-          error: '⚠️ Image servers are currently busy. Your collection is available but some images may be placeholders.'
-        });
-        
-        // If we got partial data, still use it
-        if (error.response.data && Array.isArray(error.response.data)) {
-          set({ collection: error.response.data });
-        }
-      } else {
-        set({ error: 'Failed to fetch collection. The image service might be temporarily overloaded. Please try again in a few minutes.' });
-      }
+      // Get collection from localStorage
+      const collectionString = localStorage.getItem(COLLECTION_KEY);
+      const collection = collectionString ? JSON.parse(collectionString) : [];
+      
+      set({ collection });
+    } catch (error) {
+      console.error('Error loading collection from localStorage:', error);
+      set({ collection: [], error: 'Failed to load your collection from local storage.' });
+    }
+  },
+  
+  // Add a card to the collection in localStorage
+  addCardToCollection: (card: Card) => {
+    try {
+      // Get current collection
+      const collectionString = localStorage.getItem(COLLECTION_KEY);
+      const collection = collectionString ? JSON.parse(collectionString) : [];
+      
+      // Add new card
+      collection.push(card);
+      
+      // Update localStorage
+      localStorage.setItem(COLLECTION_KEY, JSON.stringify(collection));
+      localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
+      
+      // Update state
+      set({ collection });
+    } catch (error) {
+      console.error('Error adding card to collection:', error);
     }
   },
   
   fetchPityInfo: async () => {
-    const { user, isAuthenticated } = get();
-    
-    // Check authentication
-    if (!isAuthenticated || !user) {
-      // Silently return for pity info since it's loaded on app startup
-      return;
-    }
+    // Get current user ID
+    const userId = get().getUserId();
     
     try {
-      const response = await axios.get(`${API_URL}/pity/${user.userId}`, { withCredentials: true });
+      const response = await axios.get(`${API_URL}/pity/${userId}`);
       
       // If we got valid pity data, update the store
       if (response.data) {
@@ -397,15 +280,33 @@ export const useStore = create<State>((set, get) => ({
       }
     } catch (error: any) {
       console.error('Error fetching pity info:', error);
-      
-      // Handle 401 Unauthorized
-      if (error.response && error.response.status === 401) {
-        set({ isAuthenticated: false, user: null });
-      }
-      
       // We don't set an error state here to avoid disrupting the main UI
     }
   },
   
-  clearCard: () => set({ card: null }) // Keep lastPityInfo unchanged
+  clearCard: () => set({ card: null }), // Keep lastPityInfo unchanged
+  
+  // Method to clear all local storage data (for collection expiration)
+  clearLocalData: () => {
+    localStorage.removeItem(COLLECTION_KEY);
+    localStorage.removeItem(USER_ID_KEY);
+    localStorage.removeItem(COLLECTION_TIMESTAMP_KEY);
+    
+    set({
+      collection: [],
+      lastPityInfo: null,
+      card: null,
+      user: null
+    });
+    
+    // Generate a new user ID
+    const userId = generateUserId();
+    const username = 'guest_user';
+    
+    localStorage.setItem(USER_ID_KEY, userId);
+    localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
+    localStorage.setItem(COLLECTION_KEY, JSON.stringify([]));
+    
+    set({ user: { userId, username, email: '' } });
+  }
 }));

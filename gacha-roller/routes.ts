@@ -15,17 +15,16 @@ import { isAuthenticated, attachUser } from './authMiddleware';
 
 // Create a function to setup routes with access to the initialized DB
 export function setupRoutes(app: express.Express, db: Database) {
-  // Apply attach user middleware to all routes
-  app.use(attachUser);
+  // Removed attachUser middleware to disable authentication
   
-  // Endpoint to roll a new card - requires authentication
+  // Endpoint to roll a new card - no authentication required
   app.post('/roll', (req, res, next) => {
     // Special handling for OPTIONS requests
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
     next();
-  }, isAuthenticated, async (req, res) => {
+  }, async (req, res) => {
     // ⚠️ DIRECT MYTHIC CHECK ⚠️
     // Check if body contains the string "mythic" or "legendary" anywhere
     const bodyStr = JSON.stringify(req.body).toLowerCase();
@@ -470,10 +469,9 @@ export function setupRoutes(app: express.Express, db: Database) {
       });
     }
     
-    if (!user_id || !username) {
-      logger.warn('Roll request missing user_id or username', { body: req.body });
-      return res.status(400).json({ error: 'User ID and username are required' });
-    }
+    // Use default guest user if no user_id or username provided
+    const safe_user_id = user_id || `guest_${Date.now()}`;
+    const safe_username = username || 'Guest User';
     
     try {
       // We already extracted forced_rarity above, don't redefine it
@@ -487,13 +485,13 @@ export function setupRoutes(app: express.Express, db: Database) {
       
       // Log the roll attempt
       logger.info('Roll attempt', { 
-        user_id, 
-        username, 
+        user_id: safe_user_id, 
+        username: safe_username, 
         forced_rarity: forced_rarity || 'none'
       });
       
       // Insert or update user
-      await db.run('INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)', [user_id, username]);
+      await db.run('INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)', [safe_user_id, safe_username]);
       
       // Determine card rarity and details (or use forced rarity)
       console.log('About to determine rarity. forced_rarity=', forced_rarity);
@@ -541,7 +539,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Random determination as fallback
       else {
         console.log('No valid forced rarity found, determining randomly');
-        rarity = await determineRarity(user_id);
+        rarity = await determineRarity(safe_user_id);
       }
       console.log('Rarity after determination:', rarity);
       
@@ -553,8 +551,8 @@ export function setupRoutes(app: express.Express, db: Database) {
       const { updatePity, getRollsUntilPity } = require('./pityTracker');
       
       // Update pity counters for the user
-      const updatedPity = updatePity(user_id, normalizedRarity);
-      const rollsUntilPity = getRollsUntilPity(user_id);
+      const updatedPity = updatePity(safe_user_id, normalizedRarity);
+      const rollsUntilPity = getRollsUntilPity(safe_user_id);
       
       // Add debug log for final rarity determination
       logger.info('DEBUG: Rarity determined', {
@@ -644,7 +642,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Save card to database
       const result = await db.run(
         'INSERT INTO cards (user_id, image_path, description, css, rarity, character) VALUES (?, ?, ?, ?, ?, ?)',
-        [user_id, image_path, description, css, normalizedRarity, characterName]
+        [safe_user_id, image_path, description, css, normalizedRarity, characterName]
       );
       
       const card_id = result.lastID;
@@ -709,14 +707,14 @@ export function setupRoutes(app: express.Express, db: Database) {
     }
   });
   
-  // Endpoint to get a user's card collection - requires authentication
+  // Endpoint to get a user's card collection - no authentication required
   app.get('/collection/:user_id', (req, res, next) => {
     // Special handling for OPTIONS requests
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
     next();
-  }, isAuthenticated, async (req, res) => {
+  }, async (req, res) => {
     const user_id = req.params.user_id;
     
     try {
@@ -781,14 +779,14 @@ export function setupRoutes(app: express.Express, db: Database) {
     }
   });
   
-  // Endpoint to get a user's pity information - requires authentication
+  // Endpoint to get a user's pity information - no authentication required
   app.get('/pity/:user_id', (req, res, next) => {
     // Special handling for OPTIONS requests
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
     next();
-  }, isAuthenticated, async (req, res) => {
+  }, async (req, res) => {
     const user_id = req.params.user_id;
     
     try {
