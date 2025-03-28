@@ -124,28 +124,28 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           overflow: 'hidden',
           position: 'relative',
           width: '100%',
-          maxWidth: '500px', // Proper size for a TCG card display
+          maxWidth: '650px', // Increased from 500px to 650px for larger card
           aspectRatio: '5/7', // Standard TCG card ratio
           display: 'flex',
           flexDirection: 'column',
-          padding: '10px',
+          padding: '15px', // Increased padding for larger card
           border: `2px solid ${rarityStyle.border.replace('1px solid ', '')}`
         }}>
           {/* Card Title Bar */}
           <div style={{
             background: currentStyle.frameGradient,
             borderRadius: '8px 8px 0 0',
-            padding: '6px 12px',
+            padding: '8px 15px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+            boxShadow: '0 3px 5px rgba(0,0,0,0.3)',
             position: 'relative',
             zIndex: 2,
-            height: '40px'
+            height: '50px' // Increased from 40px for larger card
           }}>
             <h2 style={{
-              fontSize: '1.2rem',
+              fontSize: '1.4rem', // Increased from 1.2rem for larger card
               color: '#fff',
               fontFamily: 'var(--font-display)',
               fontWeight: 'bold',
@@ -161,7 +161,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             
             <div className="rarity-stars" style={{
               display: 'flex',
-              gap: '2px'
+              gap: '3px' // Increased from 2px
             }}>
               {/* Show stars based on rarity (similar to Yu-Gi-Oh) */}
               {Array.from({ length: 
@@ -171,13 +171,13 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
                 card.rarity === 'legendary' ? 4 : 5 
               }).map((_, i) => (
                 <div key={i} style={{
-                  width: '12px',
-                  height: '12px',
+                  width: '15px', // Increased from 12px
+                  height: '15px', // Increased from 12px
                   background: card.rarity === 'mythic' ? 
                     'linear-gradient(to bottom right, #ef4444, #fef08a, #ef4444)' : 
                     'linear-gradient(to bottom right, #facc15, #fef08a, #facc15)',
                   clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-                  boxShadow: '0 0 3px rgba(255,255,255,0.7)'
+                  boxShadow: '0 0 4px rgba(255,255,255,0.7)' // Increased glow
                 }} />
               ))}
             </div>
@@ -186,7 +186,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           {/* Main Card Image - The centerpiece of the card */}
           <div style={{
             width: '100%',
-            height: '68%', // Increased from 60% to 68% - even more dominant
+            height: '62%', // Reduced from 68% to 62% to give more room for text
             position: 'relative',
             overflow: 'hidden',
             background: '#000',
@@ -194,9 +194,9 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '3px 0',
+            margin: '4px 0',
             padding: '0',
-            boxShadow: '0 0 10px rgba(0,0,0,0.4) inset'
+            boxShadow: '0 0 12px rgba(0,0,0,0.4) inset'
           }}>
             <img 
               src={`${API_URL}/${card.image_path}`} 
@@ -205,7 +205,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
-                padding: '4px'
+                padding: '6px'
               }} 
             />
           </div>
@@ -213,15 +213,15 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           {/* Card Type Bar - Similar to MTG type line */}
           <div style={{
             background: currentStyle.typeBackground,
-            padding: '3px 8px',
+            padding: '5px 10px',
             textAlign: 'center',
-            fontSize: '0.8rem',
+            fontSize: '0.9rem',
             color: '#fff',
             fontWeight: 'bold',
             textShadow: '0 1px 2px rgba(0,0,0,0.8)',
             borderTop: '1px solid rgba(255,255,255,0.2)',
             borderBottom: '1px solid rgba(255,255,255,0.2)',
-            margin: '2px 0 3px 0'
+            margin: '3px 0 4px 0'
           }}>
             {franchise} • {card.rarity.toUpperCase()}
           </div>
@@ -230,28 +230,28 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           <div style={{
             background: 'rgba(0,0,0,0.7)',
             flex: 1,
-            padding: '8px 10px',
-            margin: '2px 0',
-            fontSize: '0.8rem',
+            padding: '12px 15px', // Increased padding for larger card
+            margin: '3px 0',
+            fontSize: '0.9rem',
             color: '#eee',
             border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: '3px',
+            borderRadius: '5px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            maxHeight: '15%', // Reduced height for shorter text
+            maxHeight: '18%', // Increased by 20% from 15% to 18%
             overflow: 'hidden' // Ensure text doesn't overflow
           }}>
             <div style={{
-              fontSize: '1rem', // Larger font for better readability with fewer words
+              fontSize: '1.15rem', // Increased for better visibility on larger card
               lineHeight: '1.3',
               textAlign: 'center', // Center alignment for short text
-              fontWeight: '400',
-              padding: '2px',
+              fontWeight: '500', // Slightly heavier font weight
+              padding: '4px',
               maxHeight: '100%',
               overflow: 'hidden',
               color: '#ffffff',
-              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+              textShadow: '0 1px 3px rgba(0,0,0,0.5)'
             }}>
               {card.description}
             </div>
@@ -262,11 +262,11 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '0.65rem',
+            fontSize: '0.75rem', // Increased for larger card
             color: 'rgba(255,255,255,0.6)',
             background: 'rgba(0,0,0,0.4)',
-            padding: '3px 8px',
-            marginTop: '2px',
+            padding: '5px 10px', // Increased for larger card
+            marginTop: '3px',
             borderTop: '1px solid rgba(255,255,255,0.1)'
           }}>
             <span>#{card.card_id}</span>
