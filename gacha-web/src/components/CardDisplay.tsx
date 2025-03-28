@@ -124,33 +124,37 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           overflow: 'hidden',
           position: 'relative',
           width: '100%',
-          maxWidth: '600px', // Increased from 400px to 600px (50% larger)
-          aspectRatio: '5/7',
+          maxWidth: '500px', // Proper size for a TCG card display
+          aspectRatio: '5/7', // Standard TCG card ratio
           display: 'flex',
           flexDirection: 'column',
-          padding: '12px',
+          padding: '10px',
           border: `2px solid ${rarityStyle.border.replace('1px solid ', '')}`
         }}>
           {/* Card Title Bar */}
           <div style={{
             background: currentStyle.frameGradient,
-            borderRadius: '10px 10px 0 0',
-            padding: '8px 12px',
+            borderRadius: '8px 8px 0 0',
+            padding: '6px 12px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '8px',
             boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
             position: 'relative',
-            zIndex: 2
+            zIndex: 2,
+            height: '40px'
           }}>
             <h2 style={{
-              fontSize: '1.4rem',
+              fontSize: '1.2rem',
               color: '#fff',
               fontFamily: 'var(--font-display)',
               fontWeight: 'bold',
               margin: 0,
-              textShadow: currentStyle.textShadow
+              textShadow: currentStyle.textShadow,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '80%'
             }}>
               {cleanName}
             </h2>
@@ -179,97 +183,90 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             </div>
           </div>
           
-          {/* Card Image - Main Art */}
+          {/* Main Card Image - The centerpiece of the card */}
           <div style={{
             width: '100%',
-            height: '45%', // Reduced from 50% to 45% to give more space to description
+            height: '60%', // Dominant part of the card (like in MTG or Yu-Gi-Oh)
             position: 'relative',
             overflow: 'hidden',
-            borderRadius: '8px',
             background: '#000',
-            boxShadow: '0 0 8px rgba(0,0,0,0.5) inset',
-            border: '2px solid rgba(255,255,255,0.2)',
+            border: '1px solid rgba(255,255,255,0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '8px',
+            margin: '3px 0',
+            padding: '0'
           }}>
             <img 
               src={`${API_URL}/${card.image_path}`} 
               alt={card.character}
               style={{ 
-                maxHeight: '100%',
-                maxWidth: '100%',
+                width: '100%',
+                height: '100%',
                 objectFit: 'contain',
-                display: 'block',
-                borderRadius: '4px',
+                padding: '4px'
               }} 
             />
           </div>
           
-          {/* Card Type/Franchise */}
+          {/* Card Type Bar - Similar to MTG type line */}
           <div style={{
             background: currentStyle.typeBackground,
-            borderRadius: '4px',
-            padding: '4px 8px',
+            padding: '3px 8px',
             textAlign: 'center',
-            fontSize: '0.85rem',
+            fontSize: '0.8rem',
             color: '#fff',
             fontWeight: 'bold',
-            marginBottom: '8px',
-            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+            borderTop: '1px solid rgba(255,255,255,0.2)',
+            borderBottom: '1px solid rgba(255,255,255,0.2)',
+            margin: '2px 0 3px 0'
           }}>
             {franchise} • {card.rarity.toUpperCase()}
           </div>
           
-          {/* Card Description - No scrollbar, direct display */}
+          {/* Card Text Box - For description/abilities */}
           <div style={{
-            flex: 1,
             background: 'rgba(0,0,0,0.7)',
-            borderRadius: '4px',
-            padding: '12px 10px',
-            fontSize: '0.85rem',
+            flex: 1,
+            padding: '6px 8px',
+            margin: '2px 0',
+            fontSize: '0.8rem',
             color: '#eee',
-            marginBottom: '8px',
             border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '3px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            maxHeight: '25%', // Fixed percentage of card height
+            overflow: 'hidden' // Ensure text doesn't overflow
           }}>
-            {/* Full description without scrollbar */}
             <div style={{
-              flex: 1,
-              fontSize: '1rem', // Slightly larger font size
-              lineHeight: '1.4',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              textAlign: 'justify', // Improve text flow
-              hyphens: 'auto', // Allow hyphenation for better text wrapping
-              padding: '6px'
+              fontSize: '0.85rem',
+              lineHeight: '1.2',
+              textAlign: 'left',
+              padding: '0 2px',
+              maxHeight: '100%',
+              overflow: 'hidden'
             }}>
               {card.description}
             </div>
           </div>
           
-          {/* Card Footer */}
+          {/* Card Footer - Like the collector info on MTG cards */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '0.75rem',
-            color: 'rgba(255,255,255,0.7)',
-            background: 'rgba(0,0,0,0.5)',
-            padding: '4px 8px',
-            borderRadius: '4px'
+            fontSize: '0.65rem',
+            color: 'rgba(255,255,255,0.6)',
+            background: 'rgba(0,0,0,0.4)',
+            padding: '3px 8px',
+            marginTop: '2px',
+            borderTop: '1px solid rgba(255,255,255,0.1)'
           }}>
-            <span>
-              ID: {card.card_id}
-            </span>
-            
-            <span>
-              ★ AI GACHA TCG ★
-            </span>
+            <span>#{card.card_id}</span>
+            <span>★ AI GACHA TCG ★</span>
           </div>
         </div>
         

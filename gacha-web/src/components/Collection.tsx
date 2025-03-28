@@ -223,9 +223,11 @@ const Collection = ({ cards, isOpen, onClose, onDeleteCard }: CollectionProps) =
                               src={`${API_URL}/${card.image_path}`} 
                               alt={card.character}
                               style={{ 
-                                maxHeight: '100%',
-                                maxWidth: '100%',
-                                objectFit: 'contain'
+                                width: '95%',
+                                height: '95%',
+                                objectFit: 'contain',
+                                objectPosition: 'center',
+                                padding: '2px'
                               }} 
                             />
                           </div>
