@@ -216,7 +216,7 @@ export const useStore = create<State>((set, get) => ({
       const collection = collectionString ? JSON.parse(collectionString) : [];
       
       // Calculate a unique ID per character (card_id will be count+1 for that character)
-      const characterCards = collection.filter(c => c.character === card.character);
+      const characterCards = collection.filter((c: Card) => c.character === card.character);
       const characterId = characterCards.length + 1;
       
       // Override the card_id with the character-specific ID
@@ -244,7 +244,7 @@ export const useStore = create<State>((set, get) => ({
       const collection = collectionString ? JSON.parse(collectionString) : [];
       
       // Find and remove the card by ID
-      const filteredCollection = collection.filter(card => card.card_id !== cardId);
+      const filteredCollection = collection.filter((card: Card) => card.card_id !== cardId);
       
       // If nothing was removed, log an error
       if (filteredCollection.length === collection.length) {
