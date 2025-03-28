@@ -4,7 +4,6 @@ import { Database } from 'sqlite';
 import { 
   determineRarity, 
   rarityTiers, 
-  fallbackEnhancements, 
   generateEnhancements,
   generateImage, 
   generateDescription, 
@@ -609,15 +608,21 @@ export function setupRoutes(app: express.Express, db: Database) {
       } catch (enhError) {
         logger.error('Error generating AI enhancements, using fallback', { error: enhError });
         
-        // Fallback to random selection from static list
-        const availableEnhancements = [...fallbackEnhancements];
-        selectedEnhancements = [];
+        // Use a simple default set of enhancements as fallback
+        const defaultEnhancements = [
+          'wearing a cowboy hat',
+          'made of cardboard',
+          'as a steampunk version',
+          'with neon accents',
+          'wearing space armor',
+          'in medieval knight outfit',
+          'as a ghostly apparition',
+          'made of crystal',
+          'with cyberpunk augmentations',
+          'wearing formal business attire'
+        ];
         
-        for (let i = 0; i < maxEnh && availableEnhancements.length > 0; i++) {
-          const randIndex = Math.floor(Math.random() * availableEnhancements.length);
-          selectedEnhancements.push(availableEnhancements[randIndex]);
-          availableEnhancements.splice(randIndex, 1);
-        }
+        selectedEnhancements = defaultEnhancements.slice(0, maxEnh);
       }
       
       // Log the card details before generation
