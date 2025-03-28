@@ -1,6 +1,5 @@
 // src/components/CardDisplay.tsx
 import { motion } from 'framer-motion';
-import PityDisplay from './PityDisplay';
 
 // Import API URL from store
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -65,6 +64,49 @@ const rarityConfig = {
 const CardDisplay = ({ card, onClose }: CardProps) => {
   const rarityStyle = rarityConfig[card.rarity as keyof typeof rarityConfig] || rarityConfig.common;
   
+  // TCG styling - reference colors and styles based on rarity
+  const tcgStyles = {
+    common: {
+      frameGradient: 'linear-gradient(to bottom, #777, #333)',
+      textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+      typeBackground: 'linear-gradient(to right, #555, #777)'
+    },
+    rare: {
+      frameGradient: 'linear-gradient(to bottom, #60a5fa, #1e40af)',
+      textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+      typeBackground: 'linear-gradient(to right, #1e40af, #3b82f6)'
+    },
+    epic: {
+      frameGradient: 'linear-gradient(to bottom, #c084fc, #7e22ce)',
+      textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+      typeBackground: 'linear-gradient(to right, #7e22ce, #a855f7)'
+    },
+    legendary: {
+      frameGradient: 'linear-gradient(to bottom, #facc15, #b45309)',
+      textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+      typeBackground: 'linear-gradient(to right, #b45309, #eab308)'
+    },
+    mythic: {
+      frameGradient: 'linear-gradient(to bottom, #ef4444, #7f1d1d)',
+      textShadow: '0 1px 5px rgba(0,0,0,0.9)',
+      typeBackground: 'linear-gradient(to right, #7f1d1d, #ef4444)'
+    }
+  };
+  
+  const currentStyle = tcgStyles[card.rarity as keyof typeof tcgStyles] || tcgStyles.common;
+  
+  // Generate a short lore/flavor text from the description (first 100 characters)
+  const flavorText = card.description.length > 120 ? 
+    `${card.description.substring(0, 120)}...` : 
+    card.description;
+    
+  // Get franchise from character name if it includes parentheses
+  const franchiseMatch = card.character.match(/\((.*?)\)/);
+  const franchise = franchiseMatch ? franchiseMatch[1] : "Robot Universe";
+  
+  // Clean character name (remove franchise in parentheses)
+  const cleanName = card.character.replace(/\s*\(.*?\)\s*/, '');
+  
   return (
     <motion.div
       className="modal-overlay"
@@ -73,102 +115,203 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="card-modal"
-        style={{
-          border: rarityStyle.border,
-          background: rarityStyle.background,
-          boxShadow: rarityStyle.glow,
-          margin: '20px' /* Add margin to ensure it doesn't touch screen edges */
-        }}
+        className="tcg-card-container"
         initial={{ scale: 0.8, y: 20, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         transition={{ type: 'spring', delay: 0.2 }}
       >
-        {/* Rarity badge */}
-        <div className={`rarity-badge rarity-${card.rarity}`}>
-          {card.rarity}
-        </div>
-        
-        {/* Compact card image with reduced dimensions */}
-        <div style={{ 
-          height: '500px',
+        <div className="tcg-card" style={{
+          background: '#000',
+          borderRadius: '16px',
+          boxShadow: rarityStyle.glow + ', 0 0 30px rgba(0,0,0,0.8)',
           overflow: 'hidden',
           position: 'relative',
-          backgroundColor: '#0c0a16',
+          width: '100%',
+          maxWidth: '400px',
+          aspectRatio: '5/7',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          flexDirection: 'column',
+          padding: '12px',
+          border: `2px solid ${rarityStyle.border.replace('1px solid ', '')}`
         }}>
-          <img 
-            src={`${API_URL}/${card.image_path}`} 
-            alt={card.character}
-            style={{ 
-              maxHeight: '100%',
-              maxWidth: '100%',
-              objectFit: 'contain',
-              display: 'block'
-            }} 
-          />
-        </div>
-        
-        {/* Card content */}
-        <div style={{ padding: 'var(--space-lg)' }}>
-          <h3 className={`rarity-${card.rarity} mb-sm`} style={{ 
-            fontSize: '1.5rem',
-            fontFamily: 'var(--font-display)'
+          {/* Card Title Bar */}
+          <div style={{
+            background: currentStyle.frameGradient,
+            borderRadius: '10px 10px 0 0',
+            padding: '8px 12px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+            position: 'relative',
+            zIndex: 2
           }}>
-            {card.character}
-          </h3>
-          
-          <p className="mb-md" style={{ 
-            fontSize: '0.9rem',
-            lineHeight: '1.6', 
-            color: 'var(--gray-200)',
-            maxHeight: '150px', /* Compact height */
-            overflow: 'auto',
-            paddingRight: '8px' /* Gives space for scrollbar */
-          }}>
-            {card.description}
-          </p>
-          
-          
-          {/* Pity information */}
-          {card.pity_info && (
-            <div style={{ marginTop: 'var(--space-md)' }}>
-              <PityDisplay pityInfo={card.pity_info} />
-            </div>
-          )}
-          
-          {/* Card ID with fancy styling */}
-          <div className="flex justify-between items-center" style={{ 
-            marginTop: 'var(--space-md)',
-            paddingTop: 'var(--space-sm)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
-            <span className="glass-effect" style={{ 
-              fontSize: '0.75rem',
-              padding: '2px 8px',
-              borderRadius: 'var(--radius-full)',
-              color: 'var(--gray-300)'
+            <h2 style={{
+              fontSize: '1.4rem',
+              color: '#fff',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 'bold',
+              margin: 0,
+              textShadow: currentStyle.textShadow
             }}>
-              ID #{card.card_id}
-            </span>
-
-            <motion.button
-              className="btn-secondary"
+              {cleanName}
+            </h2>
+            
+            <div className="rarity-stars" style={{
+              display: 'flex',
+              gap: '2px'
+            }}>
+              {/* Show stars based on rarity (similar to Yu-Gi-Oh) */}
+              {Array.from({ length: 
+                card.rarity === 'common' ? 1 :
+                card.rarity === 'rare' ? 2 :
+                card.rarity === 'epic' ? 3 :
+                card.rarity === 'legendary' ? 4 : 5 
+              }).map((_, i) => (
+                <div key={i} style={{
+                  width: '12px',
+                  height: '12px',
+                  background: card.rarity === 'mythic' ? 
+                    'linear-gradient(to bottom right, #ef4444, #fef08a, #ef4444)' : 
+                    'linear-gradient(to bottom right, #facc15, #fef08a, #facc15)',
+                  clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+                  boxShadow: '0 0 3px rgba(255,255,255,0.7)'
+                }} />
+              ))}
+            </div>
+          </div>
+          
+          {/* Card Image - Main Art */}
+          <div style={{
+            width: '100%',
+            height: '50%',
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: '8px',
+            background: '#000',
+            boxShadow: '0 0 8px rgba(0,0,0,0.5) inset',
+            border: '2px solid rgba(255,255,255,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '8px',
+          }}>
+            <img 
+              src={`${API_URL}/${card.image_path}`} 
+              alt={card.character}
               style={{ 
-                margin: 0, 
-                padding: '4px 12px', 
-                fontSize: '0.875rem' 
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onClose}
-            >
-              Close
-            </motion.button>
+                maxHeight: '100%',
+                maxWidth: '100%',
+                objectFit: 'contain',
+                display: 'block',
+                borderRadius: '4px',
+              }} 
+            />
+          </div>
+          
+          {/* Card Type/Franchise */}
+          <div style={{
+            background: currentStyle.typeBackground,
+            borderRadius: '4px',
+            padding: '4px 8px',
+            textAlign: 'center',
+            fontSize: '0.85rem',
+            color: '#fff',
+            fontWeight: 'bold',
+            marginBottom: '8px',
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+          }}>
+            {franchise} • {card.rarity.toUpperCase()}
+          </div>
+          
+          {/* Card Description */}
+          <div style={{
+            flex: 1,
+            background: 'rgba(0,0,0,0.7)',
+            borderRadius: '4px',
+            padding: '8px',
+            fontSize: '0.85rem',
+            color: '#eee',
+            marginBottom: '8px',
+            border: '1px solid rgba(255,255,255,0.15)',
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Full description scrollable section */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              fontSize: '0.9rem',
+              lineHeight: '1.4',
+              paddingRight: '4px'
+            }}>
+              {card.description}
+            </div>
+            
+            {/* Flavor text / Lore (separated by a line) */}
+            <div style={{
+              borderTop: '1px solid rgba(255,255,255,0.2)',
+              marginTop: '8px',
+              paddingTop: '8px',
+              fontSize: '0.8rem',
+              fontStyle: 'italic',
+              color: '#bbb'
+            }}>
+              "{flavorText}"
+            </div>
+          </div>
+          
+          {/* Card Footer */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.7)',
+            background: 'rgba(0,0,0,0.5)',
+            padding: '4px 8px',
+            borderRadius: '4px'
+          }}>
+            <span>
+              ID: {card.card_id}
+            </span>
+            
+            <span>
+              ★ AI GACHA TCG ★
+            </span>
           </div>
         </div>
+        
+        {/* Close button outside card */}
+        <motion.button
+          className="tcg-close-button"
+          style={{ 
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            background: 'rgba(0,0,0,0.7)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.3)',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: '18px',
+            zIndex: 10,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ×
+        </motion.button>
       </motion.div>
     </motion.div>
   );

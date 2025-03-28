@@ -375,19 +375,54 @@ main {
   z-index: 50;
 }
 
-/* Card display modal styling */
-.card-modal {
-  max-width: 600px; /* More compact width */
-  max-height: 80vh; /* Reduced height */
-  width: 95%;
-  height: auto;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  position: relative;
-  overflow: auto; /* Allow scrolling */
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+/* TCG card container styling */
+.tcg-card-container {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  max-height: 85vh;
+  position: relative;
+}
+
+/* Card animations for hover effects */
+@keyframes cardHover {
+  0% {
+    transform: translateY(0) rotate(0);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+  }
+  100% {
+    transform: translateY(-5px) rotate(2deg);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+  }
+}
+
+/* TCG grid card styling */
+.tcg-grid-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tcg-grid-card:hover .delete-card-btn {
+  opacity: 1;
+}
+
+/* Override delete button styles */
+.delete-card-btn {
+  transition: all 0.2s ease;
+}
+
+.delete-card-btn:hover {
+  background: rgba(220, 38, 38, 1) !important;
+  transform: scale(1.1);
+}
+
+/* For accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .tcg-card-container, .tcg-grid-card {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* Card collection grid with masonry-like layout */
@@ -430,13 +465,15 @@ main {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform var(--transition-medium);
+  padding: 4px; /* Add slight padding to prevent edge touching */
 }
 
 /* Special styling for the card modal image */
 .card-modal .card-image {
   object-fit: contain; /* Show the entire image without cropping */
+  padding: 12px; /* More padding for modal view */
 }
 
 .card-grid-item:hover .card-image {

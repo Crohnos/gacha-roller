@@ -162,73 +162,166 @@ const Collection = ({ cards, isOpen, onClose, onDeleteCard }: CollectionProps) =
                     {cardsByRarity[rarity].map(card => (
                       <motion.div
                         key={card.card_id}
-                        className="card-grid-item"
+                        className="tcg-grid-card"
                         style={{
-                          boxShadow: (rarityGlow as any)[card.rarity] || rarityGlow.common,
-                          border: `1px solid var(--rarity-${card.rarity})`,
+                          background: 'black',
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          boxShadow: `0 5px 15px rgba(0,0,0,0.4), ${(rarityGlow as any)[card.rarity] || rarityGlow.common}`,
+                          border: `2px solid var(--rarity-${card.rarity})`,
+                          position: 'relative',
+                          aspectRatio: '5/7',
                         }}
                         whileHover={{ 
-                          y: -5,
-                          boxShadow: `0 15px 25px -3px rgba(0, 0, 0, 0.6), ${(rarityGlow as any)[card.rarity] || rarityGlow.common}`
+                          y: -8,
+                          scale: 1.05,
+                          boxShadow: `0 15px 30px rgba(0,0,0,0.6), ${(rarityGlow as any)[card.rarity] || rarityGlow.common}`,
+                          rotate: '2deg',
+                          transition: { duration: 0.2 }
                         }}
                         onClick={() => setSelectedCard(card)}
                       >
-                        <div className="card-image-container" style={{ paddingTop: '100%' }}>
-                          <img 
-                            className="card-image"
-                            src={`${API_URL}/${card.image_path}`} 
-                            alt={card.character}
-                          />
-                          <div className="card-info-overlay">
-                            <div>
-                              <h4 className={`rarity-${card.rarity}`} style={{
-                                fontSize: '0.95rem',
-                                fontWeight: 'bold',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                marginBottom: 'var(--space-xs)'
-                              }}>
-                                {card.character}
-                              </h4>
-                              <div className="flex justify-between items-center">
-                                <span className="glass-effect" style={{
-                                  fontSize: '0.7rem',
-                                  padding: '1px 6px',
-                                  borderRadius: 'var(--radius-full)'
-                                }}>
-                                  #{card.card_id}
-                                </span>
-                                
-                                <span className={`rarity-${card.rarity}`} style={{ 
-                                  fontSize: '0.7rem',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em'
-                                }}>
-                                  {card.rarity}
-                                </span>
-                              </div>
-                              
-                              {/* Delete button */}
-                              <button 
-                                className="delete-card-btn"
-                                aria-label="Delete card"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (window.confirm(`Are you sure you want to delete this ${card.rarity} ${card.character} card?`)) {
-                                    // We'll implement this function in the store
-                                    onDeleteCard(card.card_id);
-                                  }
-                                }}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                  <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                                </svg>
-                              </button>
-                            </div>
+                        {/* Card Frame */}
+                        <div style={{ 
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: '24px',
+                          background: card.rarity === 'common' ? 'linear-gradient(to right, #555, #777)' :
+                                      card.rarity === 'rare' ? 'linear-gradient(to right, #1e40af, #3b82f6)' :
+                                      card.rarity === 'epic' ? 'linear-gradient(to right, #7e22ce, #a855f7)' :
+                                      card.rarity === 'legendary' ? 'linear-gradient(to right, #b45309, #eab308)' :
+                                      'linear-gradient(to right, #7f1d1d, #ef4444)',
+                          zIndex: 1,
+                          borderBottom: '1px solid rgba(255,255,255,0.3)'
+                        }} />
+                        
+                        {/* Card Image */}
+                        <div style={{ 
+                          padding: '28px 6px 6px 6px',
+                          height: '70%',
+                          position: 'relative',
+                          background: '#000',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            overflow: 'hidden',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            position: 'relative',
+                            background: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <img 
+                              src={`${API_URL}/${card.image_path}`} 
+                              alt={card.character}
+                              style={{ 
+                                maxHeight: '100%',
+                                maxWidth: '100%',
+                                objectFit: 'contain'
+                              }} 
+                            />
+                          </div>
+                          
+                          {/* Rarity Stars */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '8px',
+                            zIndex: 2,
+                            display: 'flex',
+                            gap: '2px'
+                          }}>
+                            {Array.from({ length: 
+                              card.rarity === 'common' ? 1 :
+                              card.rarity === 'rare' ? 2 :
+                              card.rarity === 'epic' ? 3 :
+                              card.rarity === 'legendary' ? 4 : 5 
+                            }).map((_, i) => (
+                              <div key={i} style={{
+                                width: '8px',
+                                height: '8px',
+                                background: card.rarity === 'mythic' ? 
+                                  'linear-gradient(to bottom right, #ef4444, #fef08a, #ef4444)' : 
+                                  'linear-gradient(to bottom right, #facc15, #fef08a, #facc15)',
+                                clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+                                boxShadow: '0 0 2px rgba(255,255,255,0.7)'
+                              }} />
+                            ))}
                           </div>
                         </div>
+                        
+                        {/* Card Name */}
+                        <div style={{
+                          padding: '4px 6px',
+                          background: 'rgba(0,0,0,0.8)',
+                          fontSize: '0.8rem',
+                          fontWeight: 'bold',
+                          color: card.rarity === 'common' ? '#ddd' :
+                                card.rarity === 'rare' ? '#60a5fa' :
+                                card.rarity === 'epic' ? '#c084fc' :
+                                card.rarity === 'legendary' ? '#facc15' : '#ef4444',
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                          borderTop: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          {card.character.replace(/\s*\(.*?\)\s*/, '')}
+                        </div>
+                        
+                        {/* Card ID */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '4px',
+                          left: '6px',
+                          fontSize: '0.6rem',
+                          color: 'rgba(255,255,255,0.5)',
+                        }}>
+                          #{card.card_id}
+                        </div>
+                        
+                        {/* Delete button */}
+                        <button 
+                          className="delete-card-btn"
+                          aria-label="Delete card"
+                          style={{
+                            position: 'absolute',
+                            top: '30px',
+                            right: '8px',
+                            background: 'rgba(220, 38, 38, 0.8)',
+                            color: 'white',
+                            border: 'none',
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            opacity: 0,
+                            zIndex: 10,
+                            fontSize: '12px'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Are you sure you want to delete this ${card.rarity} ${card.character} card?`)) {
+                              onDeleteCard(card.card_id);
+                            }
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                          </svg>
+                        </button>
                       </motion.div>
                     ))}
                   </div>
