@@ -37,6 +37,7 @@ interface State {
   fetchPityInfo: () => Promise<void>;
   clearCard: () => void;
   addCardToCollection: (card: Card) => void;
+  deleteCardFromCollection: (cardId: number) => void;
   clearLocalData: () => void;
   getUserId: () => string;
 }
@@ -215,6 +216,13 @@ export const useStore = create<State>((set, get) => ({
       const collectionString = localStorage.getItem(COLLECTION_KEY);
       const collection = collectionString ? JSON.parse(collectionString) : [];
       
+      // Calculate a unique ID per character (card_id will be count+1 for that character)
+      const characterCards = collection.filter(c => c.character === card.character);
+      const characterId = characterCards.length + 1;
+      
+      // Override the card_id with the character-specific ID
+      card.card_id = characterId;
+      
       // Add new card
       collection.push(card);
       
@@ -226,6 +234,33 @@ export const useStore = create<State>((set, get) => ({
       set({ collection });
     } catch (error) {
       console.error('Error adding card to collection:', error);
+    }
+  },
+  
+  // Delete a card from the collection in localStorage
+  deleteCardFromCollection: (cardId: number) => {
+    try {
+      // Get current collection
+      const collectionString = localStorage.getItem(COLLECTION_KEY);
+      const collection = collectionString ? JSON.parse(collectionString) : [];
+      
+      // Find and remove the card by ID
+      const filteredCollection = collection.filter(card => card.card_id !== cardId);
+      
+      // If nothing was removed, log an error
+      if (filteredCollection.length === collection.length) {
+        console.error('Card not found in collection:', cardId);
+        return;
+      }
+      
+      // Update localStorage
+      localStorage.setItem(COLLECTION_KEY, JSON.stringify(filteredCollection));
+      localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
+      
+      // Update state
+      set({ collection: filteredCollection });
+    } catch (error) {
+      console.error('Error deleting card from collection:', error);
     }
   },
   

@@ -377,14 +377,14 @@ main {
 
 /* Card display modal styling */
 .card-modal {
-  max-width: 90vw; /* Much wider to fill most of the screen */
+  max-width: 800px; /* Fixed comfortable width */
   max-height: 90vh; /* Limit height to prevent overflow */
   width: 100%;
   height: auto;
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   position: relative;
-  overflow: auto; /* Changed from hidden to auto to allow scrolling */
+  overflow: auto; /* Allow scrolling */
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
@@ -420,8 +420,8 @@ main {
 
 /* Special styling for the card modal image */
 .card-modal .card-image-container {
-  padding-top: 56.25%; /* Wider aspect ratio for modal view */
-  max-height: 70vh; /* Limit height in modal view */
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+  max-height: 400px; /* Fixed height for consistency */
 }
 
 .card-image {
@@ -458,6 +458,36 @@ main {
 
 .card-grid-item:hover .card-info-overlay {
   opacity: 1;
+}
+
+/* Delete button for cards */
+.delete-card-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(220, 38, 38, 0.8);
+  color: white;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-grid-item:hover .delete-card-btn {
+  opacity: 1;
+}
+
+.delete-card-btn:hover {
+  transform: scale(1.1);
+  background: rgba(220, 38, 38, 1);
 }
 
 /* Rarity badge styling */

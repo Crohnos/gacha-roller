@@ -17,7 +17,8 @@ const App = () => {
     fetchCollection, 
     fetchPityInfo, 
     clearCard, 
-    lastPityInfo 
+    lastPityInfo,
+    deleteCardFromCollection
   } = useStore();
   
   const [showCollection, setShowCollection] = useState(false);
@@ -293,6 +294,7 @@ const App = () => {
             cards={collection}
             isOpen={showCollection}
             onClose={() => setShowCollection(false)}
+            onDeleteCard={deleteCardFromCollection}
           />
         )}
       </AnimatePresence>

@@ -89,13 +89,16 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           {card.rarity}
         </div>
         
-        {/* Full-size card image */}
-        <div className="card-image-container" style={{ paddingTop: '75%' }}>  {/* 4:3 aspect ratio for better fit */}
+        {/* Comfortable card image */}
+        <div className="card-image-container" style={{ 
+          paddingTop: '56.25%',  /* 16:9 aspect ratio */
+          maxHeight: '50vh'     /* Limit height to 50% of viewport */
+        }}>
           <img 
             className="card-image"
             src={`${API_URL}/${card.image_path}`} 
             alt={card.character}
-            style={{ objectFit: 'contain' }} /* Changed from cover to contain to show full image */
+            style={{ objectFit: 'contain' }} /* Show full image without cropping */
           />
         </div>
         
