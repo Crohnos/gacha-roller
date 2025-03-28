@@ -142,7 +142,9 @@ export async function generateImage(character: string, description: string = '')
     
     // Element 4: Positive/Negative Language
     const positivePrompts = "highly detailed, ultra realistic, professional quality";
-    const negativePrompts = "not cartoonish, not colorful, not blurry, not distorted";
+    // Add aspect ratio to match the card's image frame (width/height ratio for 100% width and 62% height of a 5:7 card)
+    // This gives us approximately a 16:10 or 1.6:1 aspect ratio
+    const negativePrompts = "not cartoonish, not colorful, not blurry, not distorted, aspect ratio 16:10";
     
     // Construct the simplified prompt with the 4 elements
     const prompt = `${characterName} from ${franchise} ${twist}, ${positivePrompts}, ${negativePrompts}`;
@@ -157,7 +159,8 @@ export async function generateImage(character: string, description: string = '')
           parameters: {
             num_inference_steps: 80,
             guidance_scale: 9.0,
-            height: 576,
+            // Adjusted dimensions to match 16:10 aspect ratio for better fit in card frame
+            height: 640,
             width: 1024,
             negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured"
           }
@@ -171,12 +174,23 @@ export async function generateImage(character: string, description: string = '')
       
       const timestamp = Date.now();
       const imagePath = `cards/card-${timestamp}.png`;
+      
+      // For Render deployment, use persistent disk storage
       const cardsDir = process.env.RENDER ? '/opt/render/project/src/gacha-roller/cards' : path.join(__dirname, 'cards');
+      
+      // Create directory if needed
+      if (!fs.existsSync(cardsDir)) {
+        fs.mkdirSync(cardsDir, { recursive: true });
+        logger.info('Created cards directory', { cardsDir });
+      }
+      
       const absolutePath = process.env.RENDER ? path.join(cardsDir, `card-${timestamp}.png`) : path.join(__dirname, imagePath);
       fs.writeFileSync(absolutePath, Buffer.from(response.data));
       
-      logger.info('Image generated successfully', { imagePath });
-      return imagePath;
+      // Always use relative path for the API response
+      const returnPath = `cards/card-${timestamp}.png`;
+      logger.info('Image generated successfully', { imagePath: returnPath, absolutePath });
+      return returnPath;
     } catch (error: any) {
       // Log the error
       logger.error('Error generating image', { error: error.message });
@@ -191,7 +205,8 @@ export async function generateImage(character: string, description: string = '')
             parameters: {
               num_inference_steps: 50,
               guidance_scale: 8.0,
-              height: 576,
+              // Adjusted dimensions to match 16:10 aspect ratio for better fit in card frame
+              height: 640,
               width: 1024,
               negative_prompt: "text, watermark, blurry, distorted, low quality"
             }
@@ -205,12 +220,23 @@ export async function generateImage(character: string, description: string = '')
         
         const timestamp = Date.now();
         const imagePath = `cards/card-${timestamp}.png`;
+        
+        // For Render deployment, use persistent disk storage
         const cardsDir = process.env.RENDER ? '/opt/render/project/src/gacha-roller/cards' : path.join(__dirname, 'cards');
+        
+        // Create directory if needed
+        if (!fs.existsSync(cardsDir)) {
+          fs.mkdirSync(cardsDir, { recursive: true });
+          logger.info('Created cards directory for fallback', { cardsDir });
+        }
+        
         const absolutePath = process.env.RENDER ? path.join(cardsDir, `card-${timestamp}.png`) : path.join(__dirname, imagePath);
         fs.writeFileSync(absolutePath, Buffer.from(fallbackResponse.data));
         
-        logger.info('Image generated with fallback model', { imagePath });
-        return imagePath;
+        // Always use relative path for the API response
+        const returnPath = `cards/card-${timestamp}.png`;
+        logger.info('Image generated with fallback model', { imagePath: returnPath, absolutePath });
+        return returnPath;
       } catch (fallbackError) {
         // If fallback fails, create an error image
         logger.error('Fallback image generation failed', { error: fallbackError });
@@ -237,25 +263,27 @@ async function createErrorImage(character: string, franchise: string, errorMessa
     // Create directory if needed
     if (!fs.existsSync(cardsDir)) {
       fs.mkdirSync(cardsDir, { recursive: true });
+      logger.info('Created cards directory for error images', { cardsDir });
     }
     
     const absolutePath = process.env.RENDER ? path.join(cardsDir, `error-${timestamp}.png`) : path.join(__dirname, errorImagePath);
+    // Always use relative path for returning to the API
     
     // Create error image with Canvas
-    const canvas = createCanvas(1024, 576); // Match the regular image dimensions
+    const canvas = createCanvas(1024, 640); // Match the updated 16:10 aspect ratio image dimensions
     const ctx = canvas.getContext('2d');
     
     // Background gradient
-    const gradient = ctx.createLinearGradient(0, 0, 1024, 576);
+    const gradient = ctx.createLinearGradient(0, 0, 1024, 640);
     gradient.addColorStop(0, '#1a1625');
     gradient.addColorStop(1, '#2d1b33');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1024, 576);
+    ctx.fillRect(0, 0, 1024, 640);
     
     // Error border
     ctx.strokeStyle = '#e53e3e';
     ctx.lineWidth = 8;
-    ctx.strokeRect(20, 20, 1024 - 40, 576 - 40);
+    ctx.strokeRect(20, 20, 1024 - 40, 640 - 40);
     
     // Error text
     ctx.textAlign = 'center';
@@ -284,8 +312,10 @@ async function createErrorImage(character: string, franchise: string, errorMessa
     const buffer = canvas.toBuffer('image/png');
     fs.writeFileSync(absolutePath, buffer);
     
-    logger.info('Created error image', { errorImagePath });
-    return errorImagePath;
+    // Always use relative path for API response
+    const returnPath = `cards/error-${timestamp}.png`;
+    logger.info('Created error image', { errorImagePath: returnPath, absolutePath });
+    return returnPath;
   } catch (error) {
     logger.error('Error creating error image', { error });
     return 'cards/generic-placeholder.png'; // Last resort fallback
@@ -293,9 +323,9 @@ async function createErrorImage(character: string, franchise: string, errorMessa
 }
 
 // Text Description Generation (Anthropic)
-export async function generateDescription(character: string) {
+export async function generateDescription(character: string, providedTwist?: string) {
   try {
-    logger.info('Generating description', { character });
+    logger.info('Generating description', { character, providedTwist });
     
     // Extract character name and franchise for better prompt
     const characterMatch = character.match(/^(.*?)\s*\((.*?)\)$/);
@@ -313,14 +343,18 @@ export async function generateDescription(character: string) {
       return `Error: Unable to generate a description for ${characterName} from ${franchise}. API connection failed.`;
     }
     
-    // First we need to get the twist for this character to include in the prompt
-    let twist = '';
-    try {
-      twist = await generateTwist(characterName, franchise);
-      logger.info('Generated twist for description', { twist, character });
-    } catch (twistError) {
-      logger.error('Error generating twist for description, using default', { error: twistError });
-      twist = 'in an unexpected situation';
+    // Use the provided twist if available, otherwise generate a new one
+    let twist = providedTwist || '';
+    if (!twist) {
+      try {
+        twist = await generateTwist(characterName, franchise);
+        logger.info('Generated twist for description because none was provided', { twist, character });
+      } catch (twistError) {
+        logger.error('Error generating twist for description, using default', { error: twistError });
+        twist = 'in an unexpected situation';
+      }
+    } else {
+      logger.info('Using provided twist for description', { twist, character });
     }
     
     // Ultra-concise prompt for creating a 30-word card description with twist

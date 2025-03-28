@@ -1,8 +1,8 @@
 // src/components/CardDisplay.tsx
 import { motion } from 'framer-motion';
 
-// Import API URL from store
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Import state management
+import { useStore } from '../store';
 
 type PityInfo = {
   rolls_until_rare: number;
@@ -63,6 +63,7 @@ const rarityConfig = {
 
 const CardDisplay = ({ card, onClose }: CardProps) => {
   const rarityStyle = rarityConfig[card.rarity as keyof typeof rarityConfig] || rarityConfig.common;
+  const getImageUrl = useStore(state => state.getImageUrl);
   
   // TCG styling - reference colors and styles based on rarity
   const tcgStyles = {
@@ -199,7 +200,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             boxShadow: '0 0 12px rgba(0,0,0,0.4) inset'
           }}>
             <img 
-              src={`${API_URL}/${card.image_path}`} 
+              src={getImageUrl(card.image_path)} 
               alt={card.character}
               style={{ 
                 width: '100%',
@@ -243,8 +244,8 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             overflow: 'hidden' // Ensure text doesn't overflow
           }}>
             <div style={{
-              fontSize: '1.15rem', // Increased for better visibility on larger card
-              lineHeight: '1.3',
+              fontSize: '0.95rem', // Reduced font size to prevent text from being cut off
+              lineHeight: '1.25',
               textAlign: 'center', // Center alignment for short text
               fontWeight: '500', // Slightly heavier font weight
               padding: '4px',

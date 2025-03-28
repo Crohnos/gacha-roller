@@ -29,6 +29,7 @@ interface State {
   collection: Card[];
   error: string | null;
   lastPityInfo: PityInfo | null;
+  imageVersion: number; // Added for cache busting
   
   setLoading: (val: boolean) => void;
   rollCard: (forcedRarity?: string) => Promise<void>;
@@ -39,6 +40,7 @@ interface State {
   deleteCardFromCollection: (cardId: number) => void;
   clearLocalData: () => void;
   getUserId: () => string;
+  getImageUrl: (imagePath: string) => string; // Helper to get proper image URL
 }
 
 // API base URL
@@ -79,6 +81,12 @@ export const useStore = create<State>((set, get) => ({
   collection: [],
   error: null,
   lastPityInfo: null,
+  imageVersion: Date.now(), // Initialize with current timestamp
+  
+  // Helper to get proper image URL with cache busting
+  getImageUrl: (imagePath: string) => {
+    return `${API_URL}/${imagePath}?v=${get().imageVersion}`;
+  },
   
   setLoading: (val) => set({ loading: val }),
   
@@ -151,7 +159,8 @@ export const useStore = create<State>((set, get) => ({
       set({ 
         card: response.data,
         loading: false,
-        lastPityInfo: pityInfo
+        lastPityInfo: pityInfo,
+        imageVersion: Date.now() // Update version to bust cache for new images
       });
     } catch (error: any) {
       console.error('Error rolling card:', error);
@@ -229,8 +238,8 @@ export const useStore = create<State>((set, get) => ({
       localStorage.setItem(COLLECTION_KEY, JSON.stringify(collection));
       localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
       
-      // Update state
-      set({ collection });
+      // Update state with new imageVersion
+      set({ collection, imageVersion: Date.now() });
     } catch (error) {
       console.error('Error adding card to collection:', error);
     }
@@ -256,8 +265,8 @@ export const useStore = create<State>((set, get) => ({
       localStorage.setItem(COLLECTION_KEY, JSON.stringify(filteredCollection));
       localStorage.setItem(COLLECTION_TIMESTAMP_KEY, Date.now().toString());
       
-      // Update state
-      set({ collection: filteredCollection });
+      // Update state with new imageVersion
+      set({ collection: filteredCollection, imageVersion: Date.now() });
     } catch (error) {
       console.error('Error deleting card from collection:', error);
     }

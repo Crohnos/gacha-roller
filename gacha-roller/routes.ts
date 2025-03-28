@@ -101,14 +101,14 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Generate a dynamic description using the same function used for normal rolls
       let description = '';
       try {
-        // Use the proper description generator
-        description = await generateDescription(character);
+        // Use the proper description generator with the twist
+        description = await generateDescription(character, twist);
         console.log('Successfully generated description for mythic:', description.substring(0, 50) + '...');
       } catch (descError) {
         // Retry the description generation one more time
         console.error('Failed to generate description for mythic, retrying:', descError);
         try {
-          description = await generateDescription(character);
+          description = await generateDescription(character, twist);
         } catch (retryError) {
           // If retry fails, throw the error to be handled by the outer catch block
           throw retryError;
@@ -234,14 +234,14 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Generate a dynamic description using the same function used for normal rolls
       let description = '';
       try {
-        // Use the proper description generator
-        description = await generateDescription(character);
+        // Use the proper description generator with the twist
+        description = await generateDescription(character, twist);
         console.log('Successfully generated description for legendary:', description.substring(0, 50) + '...');
       } catch (descError) {
         // Retry the description generation one more time
         console.error('Failed to generate description for legendary, retrying:', descError);
         try {
-          description = await generateDescription(character);
+          description = await generateDescription(character, twist);
         } catch (retryError) {
           // If retry fails, throw the error to be handled by the outer catch block
           throw retryError;
@@ -364,11 +364,11 @@ export function setupRoutes(app: express.Express, db: Database) {
         // Generate a twist for the character
         const twist = await generateTwist(characterName, franchise);
         
-        // Generate description through the proper generator
-        const description = await generateDescription(character);
+        // Generate description through the proper generator with the same twist
+        const description = await generateDescription(character, twist);
         
         // Generate image through the proper generator
-        const image_path = await generateImage(character, description);
+        const image_path = await generateImage(character);
         
         // Generate an ID and add to database
         const card_id = Math.floor(Math.random() * 1000) + 900;
@@ -494,8 +494,8 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Log the card details before generation
       logger.info('Card details determined', { user_id, character, rarity, twist });
       
-      // First generate the description to use it in the image prompt
-      const description = await generateDescription(character);
+      // First generate the description to use it in the image prompt with the same twist used for the image
+      const description = await generateDescription(character, twist);
       
       // Extract character name for database storage (without franchise)
       // Variable already defined above, reusing it
@@ -503,8 +503,8 @@ export function setupRoutes(app: express.Express, db: Database) {
         characterName = character.split('(')[0].trim();
       }
       
-      // Then generate the image using the description
-      const image_path = await generateImage(character, description);
+      // Then generate the image
+      const image_path = await generateImage(character);
       
       // We're not using CSS generation anymore with PicoCSS
       const css = '';

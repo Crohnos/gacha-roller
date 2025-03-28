@@ -75,9 +75,31 @@ app.use(express.urlencoded({ extended: true }));
 // We're using a custom CORS implementation above, so we don't need the cors middleware
 // This comment is kept for reference in case we need to revert
 
-// Static routes for cards
-app.use('/images', express.static(cardsDir));
-app.use('/cards', express.static(cardsDir));
+// Static routes for cards with caching disabled to prevent stale images
+app.use('/images', express.static(cardsDir, {
+  maxAge: 0,
+  etag: false,
+  lastModified: false
+}));
+app.use('/cards', express.static(cardsDir, {
+  maxAge: 0,
+  etag: false,
+  lastModified: false
+}));
+
+// Add a fallback for image paths with old deployments
+app.get('*/cards/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(cardsDir, filename);
+  
+  if (fs.existsSync(filePath)) {
+    logger.info('Serving image from fallback path', { filename, path: filePath });
+    res.sendFile(filePath);
+  } else {
+    logger.warn('Image not found in fallback handler', { filename });
+    res.status(404).send('Image not found');
+  }
+});
 
 // Initialize database
 async function initializeDb() {

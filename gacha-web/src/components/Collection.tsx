@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import CardDisplay from './CardDisplay';
 
-// Import API URL from store
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Import from store
+import { useStore } from '../store';
 
 type Card = {
   card_id: number;
@@ -34,6 +34,7 @@ const rarityGlow = {
 
 const Collection = ({ cards, isOpen, onClose, onDeleteCard }: CollectionProps) => {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const getImageUrl = useStore(state => state.getImageUrl);
   
   // Group cards by rarity for display
   const cardsByRarity = cards.reduce((acc, card) => {
@@ -220,7 +221,7 @@ const Collection = ({ cards, isOpen, onClose, onDeleteCard }: CollectionProps) =
                             justifyContent: 'center'
                           }}>
                             <img 
-                              src={`${API_URL}/${card.image_path}`} 
+                              src={getImageUrl(card.image_path)} 
                               alt={card.character}
                               style={{ 
                                 width: '95%',
