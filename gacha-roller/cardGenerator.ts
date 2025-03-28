@@ -323,25 +323,24 @@ export async function generateDescription(character: string) {
       twist = 'in an unexpected situation';
     }
     
-    // Updated prompt focused on creating a witty, concise description using the twist
+    // Ultra-concise prompt for creating a 30-word card description with twist
     const prompt = `
     <human>
-    Write a witty, clever description (MAXIMUM 200 words) for a trading card featuring ${characterName} from ${franchise} who is "${twist}".
+    Write an EXTREMELY BRIEF trading card description (EXACTLY 30 WORDS MAXIMUM) for ${characterName} from ${franchise} who is "${twist}".
     
-    Your description must:
-    - Be humorous and entertaining, with a tone of playful absurdity
-    - Focus specifically on the character being "${twist}" and how that transforms them
-    - Include at least one clever pun or wordplay related to the character or the twist
-    - Be concise enough to fit on a trading card (STRICT 200 word maximum)
-    - Maintain the essence of the character while embracing this ridiculous twist
-    - End with a punchy one-liner that makes the reader smile
+    Your description MUST:
+    - Be EXACTLY 30 WORDS OR LESS (this is absolutely critical)
+    - Be witty and humorous
+    - Focus on the character being "${twist}"
+    - Include one clever wordplay if possible
+    - End with a punchy line
     
-    VERY IMPORTANT:
-    - Keep it UNDER 200 words (aim for 150-175 words)
-    - Your response must ONLY include the card description with no introduction or explanation
-    - Focus on humor and wit more than complex storytelling
-    - Do NOT include "</assistant>" or any other message formatting
-    - Make sure the twist ("${twist}") is prominently featured in the description
+    CRITICAL REQUIREMENTS:
+    - MUST BE 30 WORDS OR FEWER - COUNT CAREFULLY
+    - ONLY include the card description with no explanation
+    - NO introduction or commentary
+    - NO message formatting
+    - Make it FUN and MEMORABLE
     </human>`;
     
     try {
@@ -349,7 +348,7 @@ export async function generateDescription(character: string) {
         'https://api.anthropic.com/v1/messages',
         {
           model: "claude-3-5-sonnet-20240620",  // Updated to Sonnet 3.5
-          max_tokens: 400, // Reduced from 600 to match shorter content
+          max_tokens: 100, // Significantly reduced for 30-word responses
           messages: [
             { role: "user", content: prompt }
           ]

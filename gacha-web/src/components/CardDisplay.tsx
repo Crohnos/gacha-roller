@@ -186,7 +186,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           {/* Main Card Image - The centerpiece of the card */}
           <div style={{
             width: '100%',
-            height: '60%', // Dominant part of the card (like in MTG or Yu-Gi-Oh)
+            height: '68%', // Increased from 60% to 68% - even more dominant
             position: 'relative',
             overflow: 'hidden',
             background: '#000',
@@ -195,7 +195,8 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             alignItems: 'center',
             justifyContent: 'center',
             margin: '3px 0',
-            padding: '0'
+            padding: '0',
+            boxShadow: '0 0 10px rgba(0,0,0,0.4) inset'
           }}>
             <img 
               src={`${API_URL}/${card.image_path}`} 
@@ -229,7 +230,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           <div style={{
             background: 'rgba(0,0,0,0.7)',
             flex: 1,
-            padding: '6px 8px',
+            padding: '8px 10px',
             margin: '2px 0',
             fontSize: '0.8rem',
             color: '#eee',
@@ -238,16 +239,19 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            maxHeight: '25%', // Fixed percentage of card height
+            maxHeight: '15%', // Reduced height for shorter text
             overflow: 'hidden' // Ensure text doesn't overflow
           }}>
             <div style={{
-              fontSize: '0.85rem',
-              lineHeight: '1.2',
-              textAlign: 'left',
-              padding: '0 2px',
+              fontSize: '1rem', // Larger font for better readability with fewer words
+              lineHeight: '1.3',
+              textAlign: 'center', // Center alignment for short text
+              fontWeight: '400',
+              padding: '2px',
               maxHeight: '100%',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              color: '#ffffff',
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
             }}>
               {card.description}
             </div>
