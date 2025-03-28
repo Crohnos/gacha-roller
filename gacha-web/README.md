@@ -1,23 +1,25 @@
 # Gacha Roller Web App
 
-A React-based web client for the Gacha Roller game, built with TypeScript, TailwindCSS, and Zustand.
+A React-based web client for the Gacha Roller game, built with TypeScript, PicoCSS, and Zustand.
 
 ## Features
 
 - Roll for unique AI-generated cards featuring famous AI characters
-- View your card collection
-- Check the global leaderboard
+- View your card collection with full-size images
+- Client-side storage with 24-hour session tracking
+- View pity statistics and progress toward higher rarities
 - Responsive design with beautiful animations
 
 ## Tech Stack
 
 - **React** - UI library
 - **TypeScript** - Type safety
-- **TailwindCSS** - Styling
+- **PicoCSS** - Styling framework with custom CSS
 - **Zustand** - State management
 - **Framer Motion** - Animations
 - **Axios** - API client
 - **Vite** - Build tool
+- **localStorage** - Client-side data persistence
 
 ## Getting Started
 
@@ -48,10 +50,10 @@ bun run build
 ## Project Structure
 
 - `/src` - Source code
-  - `/components` - UI components
-  - `/store.ts` - Zustand store
+  - `/components` - UI components (CardDisplay, Collection, LoadingScreen, PityDisplay)
+  - `/store.ts` - Zustand store with client-side storage logic
   - `App.tsx` - Main application component
-  - `index.css` - Global styles with TailwindCSS
+  - `index.css` - Global styles with PicoCSS customizations
 
 ## Environment Variables
 

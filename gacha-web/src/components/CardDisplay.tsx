@@ -89,12 +89,13 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           {card.rarity}
         </div>
         
-        {/* Card image with improved aspect ratio */}
-        <div className="card-image-container" style={{ paddingTop: '56.25%' }}>  {/* 16:9 aspect ratio */}
+        {/* Full-size card image */}
+        <div className="card-image-container" style={{ paddingTop: '75%' }}>  {/* 4:3 aspect ratio for better fit */}
           <img 
             className="card-image"
             src={`${API_URL}/${card.image_path}`} 
             alt={card.character}
+            style={{ objectFit: 'contain' }} /* Changed from cover to contain to show full image */
           />
         </div>
         
@@ -111,7 +112,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             fontSize: '0.9rem',
             lineHeight: '1.6', 
             color: 'var(--gray-200)',
-            maxHeight: '150px',
+            maxHeight: '200px', /* Increased height */
             overflow: 'auto'
           }}>
             {card.description}

@@ -377,13 +377,17 @@ main {
 
 /* Card display modal styling */
 .card-modal {
-  max-width: 28rem;
+  max-width: 90vw; /* Much wider to fill most of the screen */
+  max-height: 90vh; /* Limit height to prevent overflow */
   width: 100%;
+  height: auto;
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   position: relative;
-  overflow: hidden;
+  overflow: auto; /* Changed from hidden to auto to allow scrolling */
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Card collection grid with masonry-like layout */
@@ -410,8 +414,14 @@ main {
 .card-image-container {
   position: relative;
   width: 100%;
-  padding-top: 100%; /* 1:1 Aspect Ratio */
+  padding-top: 56.25%; /* 16:9 Aspect Ratio for collection view */
   overflow: hidden;
+}
+
+/* Special styling for the card modal image */
+.card-modal .card-image-container {
+  padding-top: 56.25%; /* Wider aspect ratio for modal view */
+  max-height: 70vh; /* Limit height in modal view */
 }
 
 .card-image {
@@ -422,6 +432,11 @@ main {
   height: 100%;
   object-fit: cover;
   transition: transform var(--transition-medium);
+}
+
+/* Special styling for the card modal image */
+.card-modal .card-image {
+  object-fit: contain; /* Show the entire image without cropping */
 }
 
 .card-grid-item:hover .card-image {

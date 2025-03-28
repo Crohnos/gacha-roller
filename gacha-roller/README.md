@@ -65,9 +65,9 @@ bun run index.ts
 ## Features
 
 ### Card Content
-- **AI-Generated Image**: Via Hugging Face's Stable Diffusion API with random enhancements
-- **AI-Generated Description**: Via Anthropic's API, crafting alternate-universe stories
-- **AI-Generated TailwindCSS**: Via Anthropic's API, creating unique card frames
+- **AI-Generated Image**: Via Hugging Face's Stable Diffusion 3.5 API using a simplified 4-element prompt structure
+- **AI-Generated Description**: Via Anthropic's Claude 3.5 Sonnet, crafting creative alternate-universe micro-fiction
+- **Custom Styling**: Using PicoCSS with rarity-based visual enhancements
 - **Rarity System**: Extreme probabilities for certain cards (1 in a million for mythic)
 
 ### Web App
@@ -85,18 +85,19 @@ bun run index.ts
 
 | Rarity    | Probability | Points   | Enhancements |
 |-----------|-------------|----------|--------------|
-| Common    | 90%         | 1        | 2            |
-| Rare      | 9%          | 10       | 3            |
-| Epic      | 0.9%        | 100      | 4            |
-| Legendary | 0.1%        | 1,000    | 5            |
-| Mythic    | 0.0001%     | 10,000   | 6            |
+| Common    | 90%         | 1        | 15           |
+| Rare      | 9%          | 10       | 20           |
+| Epic      | 0.9%        | 100      | 25           |
+| Legendary | 0.1%        | 1,000    | 30           |
+| Mythic    | 0.0001%     | 10,000   | 40           |
 
 ## Technologies Used
 
 - **Backend**: Bun, Express, SQLite, Winston (logging)
-- **Web App**: React, TypeScript, TailwindCSS, Zustand, Framer Motion
+- **Web App**: React, TypeScript, PicoCSS, Zustand, Framer Motion
 - **Discord Bot**: Discord.js
-- **AI APIs**: Anthropic Claude, Hugging Face Stable Diffusion
+- **AI APIs**: Anthropic Claude 3.5 Sonnet, Hugging Face Stable Diffusion 3.5
+- **Error Handling**: Custom error image generation with Canvas
 
 ## License
 

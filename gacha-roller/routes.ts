@@ -54,24 +54,17 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Get character-specific AI-generated enhancements for mythic
       let enhancements: string[] = [];
       try {
-        // Use the new AI enhancement generator with character context and more enhancements for mythic
+        // Use the AI enhancement generator with character context and more enhancements for mythic
         enhancements = await generateEnhancements(40, characterName, franchise);
       } catch (enhError) {
-        logger.error('Error generating AI enhancements for mythic, using fallback', { error: enhError });
-        
-        // Fallback to static list for mythic
-        enhancements = [
-          'cosmic background',
-          'digital glitch effect',
-          'neon glow',
-          'inverted colors',
-          'cinematic perspective',
-          'holographic overlay',
-          'quantum flux',
-          'dimensional rift',
-          'omniscient gaze',
-          'reality distortion'
-        ];
+        logger.error('Error generating AI enhancements for mythic, retrying', { error: enhError });
+        // Retry once
+        try {
+          enhancements = await generateEnhancements(40, characterName, franchise);
+        } catch (retryError) {
+          // If retry fails, throw the error to be handled by the outer catch block
+          throw retryError;
+        }
       }
       
       // Generate fake ID and timestamp
@@ -89,92 +82,20 @@ export function setupRoutes(app: express.Express, db: Database) {
         fs.mkdirSync(cardsDir, { recursive: true });
       }
       
-      // Actually generate the image
+      // Generate the image
       try {
-        // Generate image using the existing function
-        console.log('Attempting to generate mythic image for:', character);
+        // Generate image using the standard function
+        console.log('Generating mythic image for:', character);
         const generatedImagePath = await generateImage(character, enhancements);
         
         if (generatedImagePath) {
           console.log('Successfully generated mythic image:', generatedImagePath);
           image_path = generatedImagePath;
-          
-          // Verify the file exists
-          const absolutePath = path.join(__dirname, generatedImagePath);
-          if (fs.existsSync(absolutePath)) {
-            console.log('Image file exists at:', absolutePath);
-          } else {
-            console.error('Generated image file does not exist at:', absolutePath);
-            
-            // Create a placeholder image since the file doesn't exist
-            // This uses the Canvas API that's used in cardGenerator.ts
-            const { createCanvas } = require('canvas');
-            const canvas = createCanvas(800, 450);
-            const ctx = canvas.getContext('2d');
-            
-            // Mythic background
-            const gradient = ctx.createLinearGradient(0, 0, 800, 450);
-            gradient.addColorStop(0, '#4a148c');
-            gradient.addColorStop(1, '#6a1b9a');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 800, 450);
-            
-            // Character name
-            ctx.font = 'bold 36px Arial';
-            ctx.fillStyle = '#f3e5f5';
-            ctx.textAlign = 'center';
-            ctx.fillText(character, 400, 180);
-            
-            // Mythic label
-            ctx.font = 'bold 24px Arial';
-            ctx.fillStyle = '#ce93d8';
-            ctx.fillText('MYTHIC', 400, 220);
-            
-            // Save the canvas to the file
-            const buffer = canvas.toBuffer('image/png');
-            fs.writeFileSync(absolutePath, buffer);
-            console.log('Created placeholder mythic image at:', absolutePath);
-          }
         }
       } catch (imageError) {
-        console.error('Failed to generate mythic image, using fallback:', imageError);
-        // Create a placeholder image
-        try {
-          const { createCanvas } = require('canvas');
-          const canvas = createCanvas(800, 450);
-          const ctx = canvas.getContext('2d');
-          
-          // Mythic background
-          const gradient = ctx.createLinearGradient(0, 0, 800, 450);
-          gradient.addColorStop(0, '#4a148c');
-          gradient.addColorStop(1, '#6a1b9a');
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, 800, 450);
-          
-          // Character name
-          ctx.font = 'bold 36px Arial';
-          ctx.fillStyle = '#f3e5f5';
-          ctx.textAlign = 'center';
-          ctx.fillText(character, 400, 180);
-          
-          // Mythic label
-          ctx.font = 'bold 24px Arial';
-          ctx.fillStyle = '#ce93d8';
-          ctx.fillText('MYTHIC', 400, 220);
-          
-          // Error message
-          ctx.font = '18px Arial';
-          ctx.fillStyle = '#e1bee7';
-          ctx.fillText('Image generation failed', 400, 280);
-          
-          // Save the canvas to the file
-          const absolutePath = path.join(__dirname, image_path);
-          const buffer = canvas.toBuffer('image/png');
-          fs.writeFileSync(absolutePath, buffer);
-          console.log('Created error placeholder mythic image at:', absolutePath);
-        } catch (canvasError) {
-          console.error('Failed to create canvas placeholder:', canvasError);
-        }
+        console.error('Failed to generate mythic image:', imageError);
+        // If image generation fails, throw error to be handled by the outer catch block
+        throw imageError;
       }
       
       // Generate a dynamic description using the same function used for normal rolls
@@ -184,9 +105,14 @@ export function setupRoutes(app: express.Express, db: Database) {
         description = await generateDescription(character, enhancements);
         console.log('Successfully generated description for mythic:', description.substring(0, 50) + '...');
       } catch (descError) {
-        // Fallback to static description if generator fails
-        console.error('Failed to generate description for mythic, using fallback:', descError);
-        description = `A mythic entity of immense power, ${character.split(' (')[0]} transcends ordinary reality. In this alternate universe, they control the very fabric of existence, reshaping worlds at will. The cosmic forces bend to their every command.`;
+        // Retry the description generation one more time
+        console.error('Failed to generate description for mythic, retrying:', descError);
+        try {
+          description = await generateDescription(character, enhancements);
+        } catch (retryError) {
+          // If retry fails, throw the error to be handled by the outer catch block
+          throw retryError;
+        }
       }
       
       // Insert into database
@@ -263,23 +189,17 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Get character-specific AI-generated enhancements for legendary
       let enhancements: string[] = [];
       try {
-        // Use the new AI enhancement generator with character context and more enhancements for legendary
+        // Use the AI enhancement generator with character context and more enhancements for legendary
         enhancements = await generateEnhancements(30, characterName, franchise);
       } catch (enhError) {
-        logger.error('Error generating AI enhancements for legendary, using fallback', { error: enhError });
-        
-        // Fallback to static list for legendary
-        enhancements = [
-          'cosmic background',
-          'digital glitch effect',
-          'neon glow',
-          'cinematic perspective',
-          'holographic overlay',
-          'temporal distortion',
-          'ethereal glow',
-          'chromatic aberration',
-          'luminescent aura'
-        ];
+        logger.error('Error generating AI enhancements for legendary, retrying', { error: enhError });
+        // Retry once
+        try {
+          enhancements = await generateEnhancements(30, characterName, franchise);
+        } catch (retryError) {
+          // If retry fails, throw the error to be handled by the outer catch block
+          throw retryError;
+        }
       }
       
       // Generate fake ID and timestamp
@@ -297,91 +217,20 @@ export function setupRoutes(app: express.Express, db: Database) {
         fs.mkdirSync(cardsDir, { recursive: true });
       }
       
-      // Actually generate the image
+      // Generate the image
       try {
-        // Generate image using the existing function
-        console.log('Attempting to generate legendary image for:', character);
+        // Generate image using the standard function
+        console.log('Generating legendary image for:', character);
         const generatedImagePath = await generateImage(character, enhancements);
         
         if (generatedImagePath) {
           console.log('Successfully generated legendary image:', generatedImagePath);
           image_path = generatedImagePath;
-          
-          // Verify the file exists
-          const absolutePath = path.join(__dirname, generatedImagePath);
-          if (fs.existsSync(absolutePath)) {
-            console.log('Image file exists at:', absolutePath);
-          } else {
-            console.error('Generated image file does not exist at:', absolutePath);
-            
-            // Create a placeholder image since the file doesn't exist
-            const { createCanvas } = require('canvas');
-            const canvas = createCanvas(800, 450);
-            const ctx = canvas.getContext('2d');
-            
-            // Legendary background
-            const gradient = ctx.createLinearGradient(0, 0, 800, 450);
-            gradient.addColorStop(0, '#bf360c');
-            gradient.addColorStop(1, '#e65100');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 800, 450);
-            
-            // Character name
-            ctx.font = 'bold 36px Arial';
-            ctx.fillStyle = '#fff3e0';
-            ctx.textAlign = 'center';
-            ctx.fillText(character, 400, 180);
-            
-            // Legendary label
-            ctx.font = 'bold 24px Arial';
-            ctx.fillStyle = '#ffcc80';
-            ctx.fillText('LEGENDARY', 400, 220);
-            
-            // Save the canvas to the file
-            const buffer = canvas.toBuffer('image/png');
-            fs.writeFileSync(absolutePath, buffer);
-            console.log('Created placeholder legendary image at:', absolutePath);
-          }
         }
       } catch (imageError) {
-        console.error('Failed to generate legendary image, using fallback:', imageError);
-        // Create a placeholder image
-        try {
-          const { createCanvas } = require('canvas');
-          const canvas = createCanvas(800, 450);
-          const ctx = canvas.getContext('2d');
-          
-          // Legendary background
-          const gradient = ctx.createLinearGradient(0, 0, 800, 450);
-          gradient.addColorStop(0, '#bf360c');
-          gradient.addColorStop(1, '#e65100');
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, 800, 450);
-          
-          // Character name
-          ctx.font = 'bold 36px Arial';
-          ctx.fillStyle = '#fff3e0';
-          ctx.textAlign = 'center';
-          ctx.fillText(character, 400, 180);
-          
-          // Legendary label
-          ctx.font = 'bold 24px Arial';
-          ctx.fillStyle = '#ffcc80';
-          ctx.fillText('LEGENDARY', 400, 220);
-          
-          // Error message
-          ctx.font = '18px Arial';
-          ctx.fillStyle = '#ffe0b2';
-          ctx.fillText('Image generation failed', 400, 280);
-          
-          // Save the canvas to the file
-          const absolutePath = path.join(__dirname, image_path);
-          const buffer = canvas.toBuffer('image/png');
-          fs.writeFileSync(absolutePath, buffer);
-          console.log('Created error placeholder legendary image at:', absolutePath);
-        } catch (canvasError) {
-          console.error('Failed to create canvas placeholder:', canvasError);
-        }
+        console.error('Failed to generate legendary image:', imageError);
+        // If image generation fails, throw error to be handled by the outer catch block
+        throw imageError;
       }
       
       // Generate a dynamic description using the same function used for normal rolls
@@ -391,9 +240,14 @@ export function setupRoutes(app: express.Express, db: Database) {
         description = await generateDescription(character, enhancements);
         console.log('Successfully generated description for legendary:', description.substring(0, 50) + '...');
       } catch (descError) {
-        // Fallback to static description if generator fails
-        console.error('Failed to generate description for legendary, using fallback:', descError);
-        description = `A legendary AI entity known as ${character.split(' (')[0]} exists in this alternate universe as a being of remarkable power and influence. They've transcended their original purpose to become something extraordinary and awe-inspiring.`;
+        // Retry the description generation one more time
+        console.error('Failed to generate description for legendary, retrying:', descError);
+        try {
+          description = await generateDescription(character, enhancements);
+        } catch (retryError) {
+          // If retry fails, throw the error to be handled by the outer catch block
+          throw retryError;
+        }
       }
       
       // Insert into database
@@ -501,22 +355,47 @@ export function setupRoutes(app: express.Express, db: Database) {
       console.log('Request body as string:', reqStr);
       console.log('Forced rarity as string:', forcedRarityStr);
       
-      // HARDCODE MYTHIC FOR ANY REQUEST WITH MYTHIC MENTIONED
+      // MYTHIC FOUND IN REQUEST - PROCESS MYTHIC REQUEST PROPERLY
       if (reqStr.includes('mythic')) {
-        console.log('⭐⭐⭐ MYTHIC FOUND IN REQUEST - FORCING MYTHIC! ⭐⭐⭐');
+        console.log('⭐⭐⭐ MYTHIC FOUND IN REQUEST - PROCESSING MYTHIC! ⭐⭐⭐');
+        
+        // Generate a random mythic character
+        const mythicCharacters = rarityTiers.mythic.characters;
+        const character = mythicCharacters[Math.floor(Math.random() * mythicCharacters.length)];
+        const characterName = character.split(' (')[0].trim();
+        const franchise = character.split('(')[1]?.replace(')', '').trim() || '';
+        
+        // Get enhancements through the proper generator
+        const enhancements = await generateEnhancements(40, characterName, franchise);
+        
+        // Generate description through the proper generator
+        const description = await generateDescription(character, enhancements);
+        
+        // Generate image through the proper generator
+        const image_path = await generateImage(character, enhancements, description);
+        
+        // Generate an ID and add to database
+        const card_id = Math.floor(Math.random() * 1000) + 900;
+        const user_id = req.body.user_id || 'web_user_1';
+        
+        // Save to database
+        const result = await db.run(
+          'INSERT INTO cards (user_id, image_path, description, css, rarity, character) VALUES (?, ?, ?, ?, ?, ?)',
+          [user_id, image_path, description, '', 'mythic', characterName]
+        );
+        
         return res.json({
-          card_id: Math.floor(Math.random() * 1000) + 900,
-          image_path: 'cards/card-1742765808501.png',
-          description: 'A mythic entity of immense power, feared throughout the cosmos. This character embodies the essence of destruction and rebirth, a primordial force that reshapes reality at will.',
+          card_id: result.lastID || card_id,
+          image_path,
+          description,
           css: '',
           rarity: 'mythic',
-          character: 'Skynet (Terminator)',
-          enhancements: ['cosmic background', 'digital glitch effect', 'neon glow', 'inverted colors', 'cinematic perspective', 'holographic overlay'],
+          character,
+          enhancements,
           debug_info: {
             requested_rarity: 'mythic',
             final_rarity: 'mythic',
-            was_forced: true,
-            implementation: 'emergency hardcoded response'
+            was_forced: true
           }
         });
       }
@@ -603,26 +482,18 @@ export function setupRoutes(app: express.Express, db: Database) {
       // Get character-specific AI-generated enhancements
       let selectedEnhancements: string[] = [];
       try {
-        // Use the new AI enhancement generator with character context
+        // Use the AI enhancement generator with character context
         selectedEnhancements = await generateEnhancements(maxEnh, characterName, franchise);
       } catch (enhError) {
-        logger.error('Error generating AI enhancements, using fallback', { error: enhError });
+        logger.error('Error generating AI enhancements, retrying', { error: enhError });
         
-        // Use a simple default set of enhancements as fallback
-        const defaultEnhancements = [
-          'wearing a cowboy hat',
-          'made of cardboard',
-          'as a steampunk version',
-          'with neon accents',
-          'wearing space armor',
-          'in medieval knight outfit',
-          'as a ghostly apparition',
-          'made of crystal',
-          'with cyberpunk augmentations',
-          'wearing formal business attire'
-        ];
-        
-        selectedEnhancements = defaultEnhancements.slice(0, maxEnh);
+        // Retry once
+        try {
+          selectedEnhancements = await generateEnhancements(maxEnh, characterName, franchise);
+        } catch (retryError) {
+          // If retry fails, throw the error to be handled by the outer catch block
+          throw retryError;
+        }
       }
       
       // Log the card details before generation
@@ -694,14 +565,14 @@ export function setupRoutes(app: express.Express, db: Database) {
       if (isTimeoutError) {
         logger.warn('Card generation timed out', { user_id, username, error: error.message });
         res.status(503).json({ 
-          error: 'The image generation API took longer than expected. Your card might still be processing. Please try again shortly.',
+          error: 'The image generation API took longer than expected. Please try again shortly.',
           serverOverloaded: true,
           isTimeout: true
         });
       } else if (is503Error) {
         logger.warn('Card generation affected by Hugging Face API overload', { user_id, username, status: 503 });
         res.status(503).json({ 
-          error: 'Image servers are currently busy. Your card was created, but with a placeholder image. Try again in a few minutes!',
+          error: 'Image servers are currently busy. Please try again in a few minutes!',
           serverOverloaded: true
         });
       } else {
@@ -735,7 +606,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       if (is503Error) {
         logger.warn('Collection retrieval affected by Hugging Face API overload', { user_id, status: 503 });
         res.status(503).json({ 
-          error: 'Image servers are currently busy. Your collection is available but some images may be placeholders.',
+          error: 'Image servers are currently busy. Please try again in a few minutes.',
           serverOverloaded: true
         });
       } else {
