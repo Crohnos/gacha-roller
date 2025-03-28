@@ -91,7 +91,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
         
         {/* Compact card image with reduced dimensions */}
         <div style={{ 
-          height: '300px',
+          height: '500px',
           overflow: 'hidden',
           position: 'relative',
           backgroundColor: '#0c0a16',
