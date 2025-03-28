@@ -20,7 +20,6 @@ type Card = {
   css: string;
   rarity: string;
   character: string;
-  enhancements?: string[];
   pity_info?: PityInfo;
 };
 

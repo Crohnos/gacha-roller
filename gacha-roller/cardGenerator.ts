@@ -8,38 +8,34 @@ import logger from './logger';
 export const rarityTiers = {
   common: { 
     probability: 0.9, 
-    enhancements: 15, // Increased from 2
     characters: ['C-3PO (Star Wars)', 'R2-D2 (Star Wars)', 'Data (Star Trek)', 'TARS (Interstellar)', 'Baymax (Big Hero 6)'] 
   },
   rare: { 
     probability: 0.09, 
-    enhancements: 20, // Increased from 3
     characters: ['HAL 9000 (2001: A Space Odyssey)', 'T-800 (The Terminator)', 'WALL-E (WALL-E)', 'Optimus Prime (Transformers)', 'EVE (WALL-E)'] 
   },
   epic: { 
     probability: 0.009, 
-    enhancements: 25, // Increased from 4
     characters: ['Ultron (Marvel)', 'Vision (Marvel)', 'Sentinels (X-Men)', 'Hosts (Westworld)', 'Robocop (Robocop)'] 
   },
   legendary: { 
     probability: 0.001, 
-    enhancements: 30, // Increased from 5 
     characters: ['GLaDOS (Portal)', 'T-1000 (Terminator 2)', 'VIKI (I, Robot)', 'Ava (Ex Machina)', 'Samantha (Her)'] 
   },
   mythic: { 
     probability: 0.000001, 
-    enhancements: 40, // Increased from 6
     characters: ['Skynet (Terminator)', 'Agent Smith (The Matrix)', 'SHODAN (System Shock)', 'AM (I Have No Mouth and I Must Scream)', 'Wintermute (Neuromancer)'] 
   },
 };
 
-// Function to generate AI-based enhancements list
-export async function generateEnhancements(count: number = 10, character?: string, franchise?: string): Promise<string[]> {
+// Function to generate a single twist enhancement for the 4-element prompt
+export async function generateTwist(character?: string, franchise?: string): Promise<string> {
   try {
     // Check if we have API key
     if (!process.env.ANTHROPIC_API_KEY) {
-      logger.warn('No ANTHROPIC_API_KEY found, returning default options');
-      return [
+      logger.warn('No ANTHROPIC_API_KEY found, returning default twist');
+      // Default twists that work well with most characters
+      const defaultTwists = [
         'wearing a cowboy hat',
         'made of cardboard',
         'as a steampunk version',
@@ -50,53 +46,35 @@ export async function generateEnhancements(count: number = 10, character?: strin
         'made of crystal',
         'with cyberpunk augmentations',
         'wearing formal business attire'
-      ].slice(0, count);
+      ];
+      return defaultTwists[Math.floor(Math.random() * defaultTwists.length)];
     }
     
-    let enhancementPrompt;
+    // Prompt specifically for a single wacky twist
+    const twistPrompt = `
+    <human>
+    Generate ONE unique, wacky "alternate universe" twist for ${character} from ${franchise}.
     
-    if (character && franchise) {
-      // If character info is provided, generate character-appropriate enhancements
-      enhancementPrompt = `
-      <human>
-      Generate ${count} unique visual style enhancements for AI image generation of ${character} from ${franchise}.
-      
-      These should be artistic effects, styles, and visual modifications that would complement this specific character.
-      Focus on enhancements that would match the character's:
-      - Personality and powers
-      - Thematic elements from their franchise
-      - Iconic visual traits
-      - Era and technological/aesthetic context
-      
-      Each enhancement should be 1-4 words, specific enough to guide image generation but concise.
-      
-      Format your response as a simple comma-separated list with no numbering, no quotes, and no explanations.
-      Example format: enhancement1, enhancement2, enhancement3
-      
-      Make the enhancements varied and creative, but thematically appropriate for this character.
-      </human>`;
-    } else {
-      // Generic enhancement generation
-      enhancementPrompt = `
-      <human>
-      Generate ${count} unique visual style enhancements for AI image generation. These should be artistic effects, styles, and visual modifications that can be applied to character portraits.
-      
-      Each enhancement should be 1-4 words, specific enough to guide image generation but concise.
-      
-      Format your response as a simple comma-separated list with no numbering, no quotes, and no explanations.
-      Example format: enhancement1, enhancement2, enhancement3
-      
-      Make the enhancements varied and creative, including art styles, lighting effects, color treatments, textures, and perspectives.
-      </human>`;
-    }
+    This should be a creative, unexpected modification to the character that would be interesting to see in an AI-generated image.
+    
+    Examples:
+    - "wearing a cowboy hat"
+    - "made entirely of cardboard"
+    - "as a 1980s aerobics instructor"
+    - "reimagined as a Victorian gentleman"
+    - "transformed into a pizza delivery person"
+    
+    Your response must be ONLY the twist itself (3-6 words), with no explanation, introduction, or additional text.
+    Make it unexpected but recognizable as the character.
+    </human>`;
     
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
         model: "claude-3-5-sonnet-20240620",
-        max_tokens: 500,
+        max_tokens: 50,
         messages: [
-          { role: "user", content: enhancementPrompt }
+          { role: "user", content: twistPrompt }
         ]
       },
       {
@@ -105,46 +83,40 @@ export async function generateEnhancements(count: number = 10, character?: strin
           'x-api-key': process.env.ANTHROPIC_API_KEY,
           'anthropic-version': '2023-06-01'
         },
-        timeout: 15000
+        timeout: 10000
       }
     );
     
-    const enhancementsList = response.data.content[0].text.trim().split(', ');
+    let twist = response.data.content[0].text.trim();
     
-    // Clean up any formatting issues
-    const cleanedEnhancements = enhancementsList
-      .map(e => e.trim())
-      .filter(e => e.length > 0)
-      .map(e => e.toLowerCase())
-      .slice(0, count);
+    // Clean up the response
+    twist = twist
+      .replace(/^"/, '') // Remove starting quote if present
+      .replace(/"$/, '') // Remove ending quote if present
+      .toLowerCase();
     
-    logger.info('Generated enhancements list', { count: cleanedEnhancements.length, character });
+    logger.info('Generated twist for character', { twist, character });
     
-    return cleanedEnhancements;
+    return twist;
   } catch (error) {
-    logger.error('Error generating enhancements list', { error, character });
-    // Return a simple default set instead of using a huge fallback list
-    return [
+    logger.error('Error generating twist', { error, character });
+    // Default twists if API call fails
+    const fallbackTwists = [
       'wearing a cowboy hat',
       'made of cardboard',
       'as a steampunk version',
       'with neon accents',
-      'wearing space armor',
-      'in medieval knight outfit',
-      'as a ghostly apparition',
-      'made of crystal',
-      'with cyberpunk augmentations',
-      'wearing formal business attire'
-    ].slice(0, count);
+      'in a superhero costume'
+    ];
+    return fallbackTwists[Math.floor(Math.random() * fallbackTwists.length)];
   }
 }
 
+
 // Image Generation with simplified 4-element prompt approach
-export async function generateImage(character: string, enhancements: string[], description: string = '') {
+export async function generateImage(character: string, description: string = '') {
   try {
-    logger.info('Generating image', { character, enhancements });
-    
-    // Extract character name and franchise
+    // Extract character name and franchise (Elements 1 & 2)
     const characterMatch = character.match(/^(.*?)\s*\((.*?)\)$/);
     let characterName = character;
     let franchise = '';
@@ -165,36 +137,8 @@ export async function generateImage(character: string, enhancements: string[], d
       return errorImagePath;
     }
     
-    // Element 1: Character Name (e.g. T-800)
-    // Element 2: Character's Franchise (e.g. The Terminator) 
-    // Already extracted above
-    
     // Element 3: Single Wacky Alternate-Universe Twist
-    const possibleTwists = [
-      "wearing a cowboy hat",
-      "with glowing neon accents",
-      "made of cardboard",
-      "as a steampunk version",
-      "with a medieval knight armor",
-      "wearing a space suit",
-      "in samurai gear",
-      "with cyberpunk augmentations",
-      "as an ancient statue",
-      "wearing formal business attire",
-      "made of crystal",
-      "as a ghostly apparition",
-      "with fairy wings",
-      "in pirate clothing",
-      "as a wild west sheriff"
-    ];
-    
-    // Use first enhancement as a twist or pick a random one from our list
-    let twist = '';
-    if (enhancements && enhancements.length > 0) {
-      twist = enhancements[0];
-    } else {
-      twist = possibleTwists[Math.floor(Math.random() * possibleTwists.length)];
-    }
+    const twist = await generateTwist(characterName, franchise);
     
     // Element 4: Positive/Negative Language
     const positivePrompts = "highly detailed, ultra realistic, professional quality";
@@ -221,7 +165,7 @@ export async function generateImage(character: string, enhancements: string[], d
         { 
           headers: { Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}` },
           responseType: 'arraybuffer',
-          timeout: 90000 // 90 seconds
+          timeout: 120000 // 120 seconds
         }
       );
       
@@ -348,12 +292,10 @@ async function createErrorImage(character: string, franchise: string, errorMessa
   }
 }
 
-// Keywords extraction is now handled by Claude in the prompt generation
-
 // Text Description Generation (Anthropic)
-export async function generateDescription(character: string, enhancements: string[] = []) {
+export async function generateDescription(character: string) {
   try {
-    logger.info('Generating description', { character, enhancements });
+    logger.info('Generating description', { character });
     
     // Extract character name and franchise for better prompt
     const characterMatch = character.match(/^(.*?)\s*\((.*?)\)$/);
@@ -436,12 +378,6 @@ export async function generateDescription(character: string, enhancements: strin
     logger.error('Error generating description', { error, character });
     return `Error: Unable to generate a description for ${character}. API connection failed.`;
   }
-}
-
-// Placeholder CSS for PicoCSS
-export async function generateCss() {
-  // Just return an empty string as we're not using TailwindCSS anymore
-  return '';
 }
 
 // Import for TypeScript type checking only (to prevent circular dependencies)

@@ -377,9 +377,9 @@ main {
 
 /* Card display modal styling */
 .card-modal {
-  max-width: 800px; /* Fixed comfortable width */
-  max-height: 90vh; /* Limit height to prevent overflow */
-  width: 100%;
+  max-width: 600px; /* More compact width */
+  max-height: 80vh; /* Reduced height */
+  width: 95%;
   height: auto;
   background: var(--bg-card);
   border-radius: var(--radius-lg);
@@ -508,17 +508,6 @@ main {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Enhancement tags */
-.enhancement-tag {
-  display: inline-block;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-full);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-right: var(--space-xs);
-  margin-bottom: var(--space-xs);
-}
 
 /* Fancy section titles */
 .section-title {

@@ -4,10 +4,10 @@ import { Database } from 'sqlite';
 import { 
   determineRarity, 
   rarityTiers, 
-  generateEnhancements,
   generateImage, 
   generateDescription, 
-  generateCss 
+  generateCss, 
+  generateTwist
 } from './cardGenerator';
 import logger from './logger';
 
@@ -51,16 +51,16 @@ export function setupRoutes(app: express.Express, db: Database) {
         franchise = characterMatch[2].trim();
       }
       
-      // Get character-specific AI-generated enhancements for mythic
-      let enhancements: string[] = [];
+      // Generate a twist for the character
+      let twist: string = '';
       try {
-        // Use the AI enhancement generator with character context and more enhancements for mythic
-        enhancements = await generateEnhancements(40, characterName, franchise);
-      } catch (enhError) {
-        logger.error('Error generating AI enhancements for mythic, retrying', { error: enhError });
+        // Generate a twist for the character
+        twist = await generateTwist(characterName, franchise);
+      } catch (twistError) {
+        logger.error('Error generating twist for mythic, retrying', { error: twistError });
         // Retry once
         try {
-          enhancements = await generateEnhancements(40, characterName, franchise);
+          twist = await generateTwist(characterName, franchise);
         } catch (retryError) {
           // If retry fails, throw the error to be handled by the outer catch block
           throw retryError;
@@ -86,7 +86,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       try {
         // Generate image using the standard function
         console.log('Generating mythic image for:', character);
-        const generatedImagePath = await generateImage(character, enhancements);
+        const generatedImagePath = await generateImage(character);
         
         if (generatedImagePath) {
           console.log('Successfully generated mythic image:', generatedImagePath);
@@ -102,13 +102,13 @@ export function setupRoutes(app: express.Express, db: Database) {
       let description = '';
       try {
         // Use the proper description generator
-        description = await generateDescription(character, enhancements);
+        description = await generateDescription(character);
         console.log('Successfully generated description for mythic:', description.substring(0, 50) + '...');
       } catch (descError) {
         // Retry the description generation one more time
         console.error('Failed to generate description for mythic, retrying:', descError);
         try {
-          description = await generateDescription(character, enhancements);
+          description = await generateDescription(character);
         } catch (retryError) {
           // If retry fails, throw the error to be handled by the outer catch block
           throw retryError;
@@ -133,7 +133,6 @@ export function setupRoutes(app: express.Express, db: Database) {
           css: '',
           rarity: 'mythic',
           character,
-          enhancements,
           debug_info: {
             forced_rarity: 'mythic',
             request_body: req.body,
@@ -153,7 +152,6 @@ export function setupRoutes(app: express.Express, db: Database) {
           css: '',
           rarity: 'mythic',
           character,
-          enhancements,
           debug_info: {
             message: 'Mythic fallback (DB error)',
             error: String(dbError)
@@ -186,16 +184,16 @@ export function setupRoutes(app: express.Express, db: Database) {
         franchise = characterMatch[2].trim();
       }
       
-      // Get character-specific AI-generated enhancements for legendary
-      let enhancements: string[] = [];
+      // Generate a twist for the character
+      let twist: string = '';
       try {
-        // Use the AI enhancement generator with character context and more enhancements for legendary
-        enhancements = await generateEnhancements(30, characterName, franchise);
-      } catch (enhError) {
-        logger.error('Error generating AI enhancements for legendary, retrying', { error: enhError });
+        // Generate a twist for the character
+        twist = await generateTwist(characterName, franchise);
+      } catch (twistError) {
+        logger.error('Error generating twist for legendary, retrying', { error: twistError });
         // Retry once
         try {
-          enhancements = await generateEnhancements(30, characterName, franchise);
+          twist = await generateTwist(characterName, franchise);
         } catch (retryError) {
           // If retry fails, throw the error to be handled by the outer catch block
           throw retryError;
@@ -221,7 +219,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       try {
         // Generate image using the standard function
         console.log('Generating legendary image for:', character);
-        const generatedImagePath = await generateImage(character, enhancements);
+        const generatedImagePath = await generateImage(character);
         
         if (generatedImagePath) {
           console.log('Successfully generated legendary image:', generatedImagePath);
@@ -237,13 +235,13 @@ export function setupRoutes(app: express.Express, db: Database) {
       let description = '';
       try {
         // Use the proper description generator
-        description = await generateDescription(character, enhancements);
+        description = await generateDescription(character);
         console.log('Successfully generated description for legendary:', description.substring(0, 50) + '...');
       } catch (descError) {
         // Retry the description generation one more time
         console.error('Failed to generate description for legendary, retrying:', descError);
         try {
-          description = await generateDescription(character, enhancements);
+          description = await generateDescription(character);
         } catch (retryError) {
           // If retry fails, throw the error to be handled by the outer catch block
           throw retryError;
@@ -268,7 +266,6 @@ export function setupRoutes(app: express.Express, db: Database) {
           css: '',
           rarity: 'legendary',
           character,
-          enhancements,
           debug_info: {
             forced_rarity: 'legendary',
             request_body: req.body,
@@ -288,7 +285,6 @@ export function setupRoutes(app: express.Express, db: Database) {
           css: '',
           rarity: 'legendary',
           character,
-          enhancements,
           debug_info: {
             message: 'Legendary fallback (DB error)',
             error: String(dbError)
@@ -365,14 +361,14 @@ export function setupRoutes(app: express.Express, db: Database) {
         const characterName = character.split(' (')[0].trim();
         const franchise = character.split('(')[1]?.replace(')', '').trim() || '';
         
-        // Get enhancements through the proper generator
-        const enhancements = await generateEnhancements(40, characterName, franchise);
+        // Generate a twist for the character
+        const twist = await generateTwist(characterName, franchise);
         
         // Generate description through the proper generator
-        const description = await generateDescription(character, enhancements);
+        const description = await generateDescription(character);
         
         // Generate image through the proper generator
-        const image_path = await generateImage(character, enhancements, description);
+        const image_path = await generateImage(character, description);
         
         // Generate an ID and add to database
         const card_id = Math.floor(Math.random() * 1000) + 900;
@@ -391,7 +387,6 @@ export function setupRoutes(app: express.Express, db: Database) {
           css: '',
           rarity: 'mythic',
           character,
-          enhancements,
           debug_info: {
             requested_rarity: 'mythic',
             final_rarity: 'mythic',
@@ -452,8 +447,8 @@ export function setupRoutes(app: express.Express, db: Database) {
         throw new Error(`Invalid rarity: ${normalizedRarity}`);
       }
       
-      // Get the characters and enhancements for this rarity tier
-      const { characters, enhancements: maxEnh } = rarityTiers[normalizedRarity as keyof typeof rarityTiers];
+      // Get the characters for this rarity tier
+      const { characters } = rarityTiers[normalizedRarity as keyof typeof rarityTiers];
       
       // Extra debug for mythic or legendary
       if (normalizedRarity === 'mythic' || normalizedRarity === 'legendary') {
@@ -479,17 +474,17 @@ export function setupRoutes(app: express.Express, db: Database) {
         franchise = characterMatch[2].trim();
       }
       
-      // Get character-specific AI-generated enhancements
-      let selectedEnhancements: string[] = [];
+      // Generate a twist for the character
+      let twist: string = '';
       try {
-        // Use the AI enhancement generator with character context
-        selectedEnhancements = await generateEnhancements(maxEnh, characterName, franchise);
-      } catch (enhError) {
-        logger.error('Error generating AI enhancements, retrying', { error: enhError });
+        // Generate a single twist for the character
+        twist = await generateTwist(characterName, franchise);
+      } catch (twistError) {
+        logger.error('Error generating twist, retrying', { error: twistError });
         
         // Retry once
         try {
-          selectedEnhancements = await generateEnhancements(maxEnh, characterName, franchise);
+          twist = await generateTwist(characterName, franchise);
         } catch (retryError) {
           // If retry fails, throw the error to be handled by the outer catch block
           throw retryError;
@@ -497,10 +492,10 @@ export function setupRoutes(app: express.Express, db: Database) {
       }
       
       // Log the card details before generation
-      logger.info('Card details determined', { user_id, character, rarity, enhancements: selectedEnhancements });
+      logger.info('Card details determined', { user_id, character, rarity, twist });
       
-      // First generate the description to use it in the image prompt with enhancements
-      const description = await generateDescription(character, selectedEnhancements);
+      // First generate the description to use it in the image prompt
+      const description = await generateDescription(character);
       
       // Extract character name for database storage (without franchise)
       // Variable already defined above, reusing it
@@ -509,7 +504,7 @@ export function setupRoutes(app: express.Express, db: Database) {
       }
       
       // Then generate the image using the description
-      const image_path = await generateImage(character, selectedEnhancements, description);
+      const image_path = await generateImage(character, description);
       
       // We're not using CSS generation anymore with PicoCSS
       const css = '';
@@ -533,7 +528,6 @@ export function setupRoutes(app: express.Express, db: Database) {
         css,
         rarity: normalizedRarity,
         character,
-        enhancements: selectedEnhancements,
         pity_info: {
           rolls_until_rare: rollsUntilPity.rare,
           rolls_until_epic: rollsUntilPity.epic,

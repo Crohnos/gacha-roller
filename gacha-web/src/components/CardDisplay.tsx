@@ -23,7 +23,6 @@ type CardProps = {
     css: string;
     rarity: string;
     character: string;
-    enhancements?: string[];
     pity_info?: PityInfo;
   };
   onClose: () => void;
@@ -78,7 +77,8 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
         style={{
           border: rarityStyle.border,
           background: rarityStyle.background,
-          boxShadow: rarityStyle.glow
+          boxShadow: rarityStyle.glow,
+          margin: '20px' /* Add margin to ensure it doesn't touch screen edges */
         }}
         initial={{ scale: 0.8, y: 20, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -89,16 +89,25 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           {card.rarity}
         </div>
         
-        {/* Comfortable card image */}
-        <div className="card-image-container" style={{ 
-          paddingTop: '56.25%',  /* 16:9 aspect ratio */
-          maxHeight: '50vh'     /* Limit height to 50% of viewport */
+        {/* Compact card image with reduced dimensions */}
+        <div style={{ 
+          height: '300px',
+          overflow: 'hidden',
+          position: 'relative',
+          backgroundColor: '#0c0a16',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
           <img 
-            className="card-image"
             src={`${API_URL}/${card.image_path}`} 
             alt={card.character}
-            style={{ objectFit: 'contain' }} /* Show full image without cropping */
+            style={{ 
+              maxHeight: '100%',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              display: 'block'
+            }} 
           />
         </div>
         
@@ -115,57 +124,13 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             fontSize: '0.9rem',
             lineHeight: '1.6', 
             color: 'var(--gray-200)',
-            maxHeight: '200px', /* Increased height */
-            overflow: 'auto'
+            maxHeight: '150px', /* Compact height */
+            overflow: 'auto',
+            paddingRight: '8px' /* Gives space for scrollbar */
           }}>
             {card.description}
           </p>
           
-          {/* Enhancements - Condensed Display */}
-          {card.enhancements && card.enhancements.length > 0 && (
-            <div className="mb-sm">
-              <h4 className="section-title mb-sm" style={{ 
-                fontSize: '0.75rem',
-                textTransform: 'uppercase',
-                color: 'var(--gray-400)'
-              }}>
-                Key Enhancements ({card.enhancements.length} total)
-              </h4>
-              
-              <div style={{ 
-                display: 'flex', 
-                flexWrap: 'wrap',
-                gap: 'var(--space-xs)',
-                maxHeight: '80px',
-                overflow: 'auto'
-              }}>
-                {/* Show only first 5 enhancements */}
-                {card.enhancements.slice(0, 5).map((enhancement, index) => (
-                  <span 
-                    key={index}
-                    className="enhancement-tag"
-                    style={{
-                      color: rarityStyle.textColor,
-                      borderColor: rarityStyle.border.replace(/1px solid /, ''),
-                    }}
-                  >
-                    {enhancement}
-                  </span>
-                ))}
-                {card.enhancements.length > 5 && (
-                  <span 
-                    className="enhancement-tag"
-                    style={{
-                      color: rarityStyle.textColor,
-                      borderColor: rarityStyle.border.replace(/1px solid /, ''),
-                    }}
-                  >
-                    +{card.enhancements.length - 5} more
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
           
           {/* Pity information */}
           {card.pity_info && (
