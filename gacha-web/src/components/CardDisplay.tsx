@@ -95,10 +95,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
   
   const currentStyle = tcgStyles[card.rarity as keyof typeof tcgStyles] || tcgStyles.common;
   
-  // Generate a short lore/flavor text from the description (first 100 characters)
-  const flavorText = card.description.length > 120 ? 
-    `${card.description.substring(0, 120)}...` : 
-    card.description;
+  // No need for flavor text anymore as we're using a shorter description
     
   // Get franchise from character name if it includes parentheses
   const franchiseMatch = card.character.match(/\((.*?)\)/);
@@ -127,7 +124,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           overflow: 'hidden',
           position: 'relative',
           width: '100%',
-          maxWidth: '400px',
+          maxWidth: '600px', // Increased from 400px to 600px (50% larger)
           aspectRatio: '5/7',
           display: 'flex',
           flexDirection: 'column',
@@ -185,7 +182,7 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
           {/* Card Image - Main Art */}
           <div style={{
             width: '100%',
-            height: '50%',
+            height: '45%', // Reduced from 50% to 45% to give more space to description
             position: 'relative',
             overflow: 'hidden',
             borderRadius: '8px',
@@ -225,41 +222,33 @@ const CardDisplay = ({ card, onClose }: CardProps) => {
             {franchise} • {card.rarity.toUpperCase()}
           </div>
           
-          {/* Card Description */}
+          {/* Card Description - No scrollbar, direct display */}
           <div style={{
             flex: 1,
             background: 'rgba(0,0,0,0.7)',
             borderRadius: '4px',
-            padding: '8px',
+            padding: '12px 10px',
             fontSize: '0.85rem',
             color: '#eee',
             marginBottom: '8px',
             border: '1px solid rgba(255,255,255,0.15)',
-            overflow: 'auto',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            justifyContent: 'center'
           }}>
-            {/* Full description scrollable section */}
+            {/* Full description without scrollbar */}
             <div style={{
               flex: 1,
-              overflowY: 'auto',
-              fontSize: '0.9rem',
+              fontSize: '1rem', // Slightly larger font size
               lineHeight: '1.4',
-              paddingRight: '4px'
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              textAlign: 'justify', // Improve text flow
+              hyphens: 'auto', // Allow hyphenation for better text wrapping
+              padding: '6px'
             }}>
               {card.description}
-            </div>
-            
-            {/* Flavor text / Lore (separated by a line) */}
-            <div style={{
-              borderTop: '1px solid rgba(255,255,255,0.2)',
-              marginTop: '8px',
-              paddingTop: '8px',
-              fontSize: '0.8rem',
-              fontStyle: 'italic',
-              color: '#bbb'
-            }}>
-              "{flavorText}"
             </div>
           </div>
           

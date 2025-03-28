@@ -313,29 +313,35 @@ export async function generateDescription(character: string) {
       return `Error: Unable to generate a description for ${characterName} from ${franchise}. API connection failed.`;
     }
     
-    // Enhanced creative writing prompt using Claude Sonnet 3.5
-    // Using techniques from Anthropic's creative writing guide
+    // First we need to get the twist for this character to include in the prompt
+    let twist = '';
+    try {
+      twist = await generateTwist(characterName, franchise);
+      logger.info('Generated twist for description', { twist, character });
+    } catch (twistError) {
+      logger.error('Error generating twist for description, using default', { error: twistError });
+      twist = 'in an unexpected situation';
+    }
+    
+    // Updated prompt focused on creating a witty, concise description using the twist
     const prompt = `
     <human>
-    Write a vivid, unexpected, and emotionally rich micro-fiction (200-300 words) about ${characterName} from ${franchise} in an alternate universe. 
+    Write a witty, clever description (MAXIMUM 200 words) for a trading card featuring ${characterName} from ${franchise} who is "${twist}".
     
-    First, imagine three unusual concepts or settings that would create an interesting contrast with this character's established traits and abilities. Choose the most surprising and creative option.
+    Your description must:
+    - Be humorous and entertaining, with a tone of playful absurdity
+    - Focus specifically on the character being "${twist}" and how that transforms them
+    - Include at least one clever pun or wordplay related to the character or the twist
+    - Be concise enough to fit on a trading card (STRICT 200 word maximum)
+    - Maintain the essence of the character while embracing this ridiculous twist
+    - End with a punchy one-liner that makes the reader smile
     
-    Your micro-fiction should:
-    - Place the character in this unexpected alternate reality with dramatically different physical laws or social structures
-    - Transform key aspects of their identity while preserving their essential nature
-    - Include sensory details that make this world feel tangible and strange
-    - Create meaningful conflict that reveals something new about the character
-    - Use figurative language (metaphor, simile) to highlight their emotional experience
-    - End with a striking image or revelation that lingers in the reader's mind
-    
-    Aim for a specific emotional tone - perhaps melancholy, wonder, or existential humor. Experiment with unusual narrative perspectives or structures if appropriate.
-    
-    IMPORTANT:
-    - Your response must ONLY include the micro-fiction with no introduction, explanation, or commentary
-    - Avoid clichés, predictable plots, and standard "what if" scenarios  
-    - Focus on original imagery and unexpected developments
-    - Do NOT include "</assistant>" or any other message formatting in your response
+    VERY IMPORTANT:
+    - Keep it UNDER 200 words (aim for 150-175 words)
+    - Your response must ONLY include the card description with no introduction or explanation
+    - Focus on humor and wit more than complex storytelling
+    - Do NOT include "</assistant>" or any other message formatting
+    - Make sure the twist ("${twist}") is prominently featured in the description
     </human>`;
     
     try {
@@ -343,7 +349,7 @@ export async function generateDescription(character: string) {
         'https://api.anthropic.com/v1/messages',
         {
           model: "claude-3-5-sonnet-20240620",  // Updated to Sonnet 3.5
-          max_tokens: 600,
+          max_tokens: 400, // Reduced from 600 to match shorter content
           messages: [
             { role: "user", content: prompt }
           ]
