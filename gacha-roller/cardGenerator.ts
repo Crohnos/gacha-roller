@@ -47,7 +47,18 @@ export async function generateTwist(character?: string, franchise?: string): Pro
         'with cyberpunk augmentations',
         'wearing formal business attire'
       ];
-      return defaultTwists[Math.floor(Math.random() * defaultTwists.length)];
+      // Get a truly random twist from the array
+      const randomIndex = Math.floor(Math.random() * defaultTwists.length);
+      const selectedTwist = defaultTwists[randomIndex];
+      
+      logger.info('Using random default twist due to missing API key', { 
+        twist: selectedTwist, 
+        character,
+        randomIndex,
+        totalTwists: defaultTwists.length
+      });
+      
+      return selectedTwist;
     }
     
     // Prompt specifically for a single wacky twist
@@ -95,6 +106,32 @@ export async function generateTwist(character?: string, franchise?: string): Pro
       .replace(/"$/, '') // Remove ending quote if present
       .toLowerCase();
     
+    // Critical check: If the response is empty or suspicious, use a default twist
+    if (!twist || twist.length < 3 || twist === 'groovy') {
+      logger.warn('Received invalid twist from API, using fallback', { 
+        receivedTwist: twist,
+        character 
+      });
+      
+      const fallbackTwists = [
+        'wearing a cowboy hat',
+        'made of cardboard',
+        'as a steampunk version',
+        'with neon accents',
+        'in a superhero costume',
+        'as a pirate captain',
+        'in a tuxedo',
+        'as a chef',
+        'reimagined as an astronaut',
+        'made of glass',
+        'in a hawaiian shirt'
+      ];
+      
+      // Get a truly random twist from the array
+      const randomIndex = Math.floor(Math.random() * fallbackTwists.length);
+      twist = fallbackTwists[randomIndex];
+    }
+    
     logger.info('Generated twist for character', { twist, character });
     
     return twist;
@@ -106,9 +143,28 @@ export async function generateTwist(character?: string, franchise?: string): Pro
       'made of cardboard',
       'as a steampunk version',
       'with neon accents',
-      'in a superhero costume'
+      'in a superhero costume',
+      'as a pirate captain',
+      'in a tuxedo',
+      'as a chef',
+      'reimagined as an astronaut',
+      'made of glass',
+      'in a hawaiian shirt'
     ];
-    return fallbackTwists[Math.floor(Math.random() * fallbackTwists.length)];
+    
+    // Get a truly random twist from the array using a different method to ensure randomness
+    const timestamp = Date.now();
+    const randomIndex = timestamp % fallbackTwists.length;
+    const selectedTwist = fallbackTwists[randomIndex];
+    
+    logger.info('Using error fallback twist', { 
+      twist: selectedTwist, 
+      method: 'timestamp-modulus',
+      timestamp,
+      randomIndex
+    });
+    
+    return selectedTwist;
   }
 }
 
