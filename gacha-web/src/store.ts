@@ -38,6 +38,7 @@ interface State {
   clearCard: () => void;
   addCardToCollection: (card: Card) => void;
   clearLocalData: () => void;
+  getUserId: () => string;
 }
 
 // API base URL
