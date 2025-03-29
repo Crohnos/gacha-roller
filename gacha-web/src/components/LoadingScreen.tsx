@@ -217,7 +217,7 @@ const LoadingScreen = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 2.5 }} // Show after a delay
           >
-            We appreciate your patience. The image generation API may take longer during high-traffic periods. (Average: 60 seconds)
+           The image generation API may take longer during high-traffic periods. (Average: 60 seconds)
           </motion.p>
         </div>
       </motion.div>

@@ -6,7 +6,6 @@ import {
   rarityTiers, 
   generateImage, 
   generateDescription, 
-  generateCss, 
   generateTwist
 } from './cardGenerator';
 import logger from './logger';
@@ -51,21 +50,8 @@ export function setupRoutes(app: express.Express, db: Database) {
         franchise = characterMatch[2].trim();
       }
       
-      // Generate a twist for the character
-      let twist: string = '';
-      try {
-        // Generate a twist for the character
-        twist = await generateTwist(characterName, franchise);
-      } catch (twistError) {
-        logger.error('Error generating twist for mythic, retrying', { error: twistError });
-        // Retry once
-        try {
-          twist = await generateTwist(characterName, franchise);
-        } catch (retryError) {
-          // If retry fails, throw the error to be handled by the outer catch block
-          throw retryError;
-        }
-      }
+      // Generate a twist for the character from static list
+      const twist = generateTwist(characterName, franchise);
       
       // Generate fake ID and timestamp
       const card_id = Math.floor(Math.random() * 1000) + 900;
@@ -184,21 +170,8 @@ export function setupRoutes(app: express.Express, db: Database) {
         franchise = characterMatch[2].trim();
       }
       
-      // Generate a twist for the character
-      let twist: string = '';
-      try {
-        // Generate a twist for the character
-        twist = await generateTwist(characterName, franchise);
-      } catch (twistError) {
-        logger.error('Error generating twist for legendary, retrying', { error: twistError });
-        // Retry once
-        try {
-          twist = await generateTwist(characterName, franchise);
-        } catch (retryError) {
-          // If retry fails, throw the error to be handled by the outer catch block
-          throw retryError;
-        }
-      }
+      // Generate a twist for the character from static list
+      const twist = generateTwist(characterName, franchise);
       
       // Generate fake ID and timestamp
       const card_id = Math.floor(Math.random() * 1000) + 500;
@@ -361,8 +334,8 @@ export function setupRoutes(app: express.Express, db: Database) {
         const characterName = character.split(' (')[0].trim();
         const franchise = character.split('(')[1]?.replace(')', '').trim() || '';
         
-        // Generate a twist for the character
-        const twist = await generateTwist(characterName, franchise);
+        // Generate a twist for the character from static list
+        const twist = generateTwist(characterName, franchise);
         
         // Generate description through the proper generator with the same twist
         const description = await generateDescription(character, twist);
@@ -474,28 +447,26 @@ export function setupRoutes(app: express.Express, db: Database) {
         franchise = characterMatch[2].trim();
       }
       
-      // Generate a twist for the character
-      let twist: string = '';
-      try {
-        // Generate a single twist for the character
-        twist = await generateTwist(characterName, franchise);
-      } catch (twistError) {
-        logger.error('Error generating twist, retrying', { error: twistError });
-        
-        // Retry once
-        try {
-          twist = await generateTwist(characterName, franchise);
-        } catch (retryError) {
-          // If retry fails, throw the error to be handled by the outer catch block
-          throw retryError;
-        }
-      }
+      // Generate a twist for the character from static list
+      const twist = generateTwist(characterName, franchise);
       
       // Log the card details before generation
       logger.info('Card details determined', { user_id, character, rarity, twist });
       
-      // First generate the description to use it in the image prompt with the same twist used for the image
-      const description = await generateDescription(character, twist);
+      // Log the twist for debugging
+      logger.info('ROUTE TWIST DEBUG', {
+        generatedTwist: twist,
+        twistType: typeof twist,
+        twistLength: twist.length,
+        characterName,
+        franchise,
+        endpoint: '/roll',
+        timestamp: Date.now(),
+        location: 'normal-rarity-determination'
+      });
+      
+      // First generate the image using the character with the twist
+      const image_path = await generateImage(character);
       
       // Extract character name for database storage (without franchise)
       // Variable already defined above, reusing it
@@ -503,8 +474,8 @@ export function setupRoutes(app: express.Express, db: Database) {
         characterName = character.split('(')[0].trim();
       }
       
-      // Then generate the image
-      const image_path = await generateImage(character);
+      // Then generate the description with the exact same twist to ensure consistency
+      const description = await generateDescription(character, twist);
       
       // We're not using CSS generation anymore with PicoCSS
       const css = '';

@@ -16,158 +16,195 @@ export const rarityTiers = {
   },
   epic: { 
     probability: 0.009, 
-    characters: ['Ultron (Marvel)', 'Vision (Marvel)', 'Sentinels (X-Men)', 'Hosts (Westworld)', 'Robocop (Robocop)'] 
+    characters: ['Ultron (Marvel)', 'Vision (Marvel)', 'Sentinels (X-Men)', 'Robocop (Robocop)'] 
   },
   legendary: { 
     probability: 0.001, 
-    characters: ['GLaDOS (Portal)', 'T-1000 (Terminator 2)', 'VIKI (I, Robot)', 'Ava (Ex Machina)', 'Samantha (Her)'] 
+    characters: ['GLaDOS (Portal)', 'T-1000 (Terminator 2)', 'VIKI (I, Robot)', 'Ava (Ex Machina)'] 
   },
   mythic: { 
     probability: 0.000001, 
-    characters: ['Skynet (Terminator)', 'Agent Smith (The Matrix)', 'SHODAN (System Shock)', 'AM (I Have No Mouth and I Must Scream)', 'Wintermute (Neuromancer)'] 
+    characters: ['Skynet (Terminator)', 'Agent Smith (The Matrix)'] 
   },
 };
 
-// Function to generate a single twist enhancement for the 4-element prompt
-export async function generateTwist(character?: string, franchise?: string): Promise<string> {
-  try {
-    // Check if we have API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      logger.warn('No ANTHROPIC_API_KEY found, returning default twist');
-      // Default twists that work well with most characters
-      const defaultTwists = [
-        'wearing a cowboy hat',
-        'made of cardboard',
-        'as a steampunk version',
-        'with neon accents',
-        'wearing space armor',
-        'in medieval knight outfit',
-        'as a ghostly apparition',
-        'made of crystal',
-        'with cyberpunk augmentations',
-        'wearing formal business attire'
-      ];
-      // Get a truly random twist from the array
-      const randomIndex = Math.floor(Math.random() * defaultTwists.length);
-      const selectedTwist = defaultTwists[randomIndex];
-      
-      logger.info('Using random default twist due to missing API key', { 
-        twist: selectedTwist, 
-        character,
-        randomIndex,
-        totalTwists: defaultTwists.length
-      });
-      
-      return selectedTwist;
-    }
-    
-    // Prompt specifically for a single wacky twist
-    const twistPrompt = `
-    <human>
-    Generate ONE unique, wacky "alternate universe" twist for ${character} from ${franchise}.
-    
-    This should be a creative, unexpected modification to the character that would be interesting to see in an AI-generated image.
-    
-    Examples:
-    - "wearing a cowboy hat"
-    - "made entirely of cardboard"
-    - "as a 1980s aerobics instructor"
-    - "reimagined as a Victorian gentleman"
-    - "transformed into a pizza delivery person"
-    
-    Your response must be ONLY the twist itself (3-6 words), with no explanation, introduction, or additional text.
-    Make it unexpected but recognizable as the character.
-    </human>`;
-    
-    const response = await axios.post(
-      'https://api.anthropic.com/v1/messages',
-      {
-        model: "claude-3-5-sonnet-20240620",
-        max_tokens: 50,
-        messages: [
-          { role: "user", content: twistPrompt }
-        ]
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        timeout: 10000
-      }
-    );
-    
-    let twist = response.data.content[0].text.trim();
-    
-    // Clean up the response
-    twist = twist
-      .replace(/^"/, '') // Remove starting quote if present
-      .replace(/"$/, '') // Remove ending quote if present
-      .toLowerCase();
-    
-    // Critical check: If the response is empty or suspicious, use a default twist
-    if (!twist || twist.length < 3 || twist === 'groovy') {
-      logger.warn('Received invalid twist from API, using fallback', { 
-        receivedTwist: twist,
-        character 
-      });
-      
-      const fallbackTwists = [
-        'wearing a cowboy hat',
-        'made of cardboard',
-        'as a steampunk version',
-        'with neon accents',
-        'in a superhero costume',
-        'as a pirate captain',
-        'in a tuxedo',
-        'as a chef',
-        'reimagined as an astronaut',
-        'made of glass',
-        'in a hawaiian shirt'
-      ];
-      
-      // Get a truly random twist from the array
-      const randomIndex = Math.floor(Math.random() * fallbackTwists.length);
-      twist = fallbackTwists[randomIndex];
-    }
-    
-    logger.info('Generated twist for character', { twist, character });
-    
-    return twist;
-  } catch (error) {
-    logger.error('Error generating twist', { error, character });
-    // Default twists if API call fails
-    const fallbackTwists = [
-      'wearing a cowboy hat',
-      'made of cardboard',
-      'as a steampunk version',
-      'with neon accents',
-      'in a superhero costume',
-      'as a pirate captain',
-      'in a tuxedo',
-      'as a chef',
-      'reimagined as an astronaut',
-      'made of glass',
-      'in a hawaiian shirt'
-    ];
-    
-    // Get a truly random twist from the array using a different method to ensure randomness
-    const timestamp = Date.now();
-    const randomIndex = timestamp % fallbackTwists.length;
-    const selectedTwist = fallbackTwists[randomIndex];
-    
-    logger.info('Using error fallback twist', { 
-      twist: selectedTwist, 
-      method: 'timestamp-modulus',
-      timestamp,
-      randomIndex
-    });
-    
-    return selectedTwist;
-  }
+// Consolidated list of all static twists for character image generation
+export const staticTwists = [
+  // Original default twists
+  'wearing a cowboy hat',
+  'made of cardboard',
+  'as a steampunk version',
+  'with neon accents',
+  'wearing space armor',
+  'in medieval knight outfit',
+  'as a ghostly apparition',
+  'made of crystal',
+  'with cyberpunk augmentations',
+  'wearing formal business attire',
+  
+  // Fallback twists
+  'in a superhero costume',
+  'as a pirate captain',
+  'in a tuxedo',
+  'as a chef',
+  'reimagined as an astronaut',
+  'made of glass',
+  'in a hawaiian shirt',
+  
+  // Additional twists from examples and expanded options
+  'as a 1980s aerobics instructor',
+  'reimagined as a Victorian gentleman',
+  'transformed into a pizza delivery person',
+  'in a post-apocalyptic wasteland',
+  'as a fairy tale character',
+  'playing a musical instrument',
+  'in a noir detective style',
+  'with magical glowing elements',
+  'floating in zero gravity',
+  'in a chibi anime style',
+  'surrounded by cute animals',
+  'in a fantasy RPG class outfit',
+  'with retro 80s synthwave aesthetics',
+  'as a cyberpunk street samurai',
+  'in ancient Egyptian attire',
+  'with clockwork mechanical parts',
+  'as a deep sea diver',
+  'in traditional Japanese clothing',
+  'drawn in a comic book style',
+  'as a barista at a coffee shop',
+  'riding a dinosaur',
+  'in a neon-lit cityscape',
+  'reimagined as a plant hybrid',
+  'as a rock band frontperson',
+  'made entirely of paper origami',
+  'with holographic projection effects',
+  'as a circus performer',
+  'in a professional sports uniform',
+  'in a western cowboy setting'
+];
+
+// Function to get a random twist from the static list
+export function generateTwist(character?: string, franchise?: string): string {
+  // Get a random twist from the array
+  const randomIndex = Math.floor(Math.random() * staticTwists.length);
+  const selectedTwist = staticTwists[randomIndex];
+  
+  logger.info('Selected random static twist', { 
+    twist: selectedTwist, 
+    character,
+    randomIndex,
+    totalTwists: staticTwists.length
+  });
+  
+  return selectedTwist;
 }
 
+
+// Function to generate dynamic prompt modifiers based on character
+function generatePromptModifiers(characterName: string, franchise: string): { positivePrompts: string, negativePrompts: string } {
+  // Default prompts for fallback
+  const defaultPositive = "highly detailed, ultra realistic, professional quality";
+  const defaultNegative = "not cartoonish, not blurry, not distorted";
+  
+  // Normalize inputs for matching
+  const normalizedCharacter = characterName.toLowerCase();
+  const normalizedFranchise = franchise.toLowerCase();
+  
+  // Set up prompt modifiers based on character/franchise attributes
+  // Sci-fi characters
+  if (normalizedFranchise.includes('star wars') || 
+      normalizedFranchise.includes('star trek') || 
+      normalizedFranchise.includes('terminator') ||
+      normalizedFranchise.includes('interstellar')) {
+    return {
+      positivePrompts: "highly detailed, sci-fi lighting, futuristic, metallic textures, cinematic quality",
+      negativePrompts: "not cartoonish, not blurry, not distorted, no bright colors"
+    };
+  }
+  
+  // Animation characters
+  if (normalizedFranchise.includes('wall-e') || 
+      normalizedFranchise.includes('big hero') ||
+      normalizedCharacter.includes('baymax')) {
+    return {
+      positivePrompts: "highly detailed, clean lines, soft lighting, character-accurate, expressive",
+      negativePrompts: "not hyper-realistic, not gritty, not human-like, no dark shadows"
+    };
+  }
+  
+  // Marvel & superhero characters
+  if (normalizedFranchise.includes('marvel') || 
+      normalizedCharacter.includes('ultron') || 
+      normalizedCharacter.includes('vision')) {
+    return {
+      positivePrompts: "highly detailed, dramatic lighting, powerful pose, vibrant, heroic",
+      negativePrompts: "not cartoon, not anime, not sketch-like, no bright backgrounds"
+    };
+  }
+  
+  // Horror/creepy AI
+  if (normalizedCharacter.includes('shodan') || 
+      normalizedCharacter.includes('am') || 
+      normalizedFranchise.includes('system shock') || 
+      normalizedFranchise.includes('i have no mouth')) {
+    return {
+      positivePrompts: "highly detailed, dark atmosphere, ominous lighting, eerie, unsettling",
+      negativePrompts: "not cartoon, not bright, not cheerful, no vibrant colors"
+    };
+  }
+  
+  // Transformers and mechanical entities
+  if (normalizedFranchise.includes('transformers') || 
+      normalizedCharacter.includes('optimus prime')) {
+    return {
+      positivePrompts: "highly detailed, metallic finish, dynamic pose, mechanical parts, robotic details",
+      negativePrompts: "not cartoon, not flat, not simplistic"
+    };
+  }
+  
+  // AI/Virtual characters
+  if (normalizedFranchise.includes('her') || 
+      normalizedFranchise.includes('ex machina') || 
+      normalizedFranchise.includes('westworld') ||
+      normalizedFranchise.includes('neuromancer')) {
+    return {
+      positivePrompts: "ethereal lighting, digital aesthetics, translucent elements, clean design",
+      negativePrompts: "not fully robotic, not overly mechanical, no rough textures"
+    };
+  }
+  
+  // Portal/GLaDOS
+  if (normalizedFranchise.includes('portal') || 
+      normalizedCharacter.includes('glados')) {
+    return {
+      positivePrompts: "clean white aesthetic, minimalist design, clinical lighting, institutional",
+      negativePrompts: "not dirty, not gritty, not colorful, no warm colors"
+    };
+  }
+  
+  // Matrix
+  if (normalizedFranchise.includes('matrix') || 
+      normalizedCharacter.includes('agent smith')) {
+    return {
+      positivePrompts: "green tint, digital rain effect, glossy black, high contrast, cyberpunk",
+      negativePrompts: "not colorful, no bright colors except green, not cartoon"
+    };
+  }
+  
+  // HAL 9000
+  if (normalizedCharacter.includes('hal')) {
+    return {
+      positivePrompts: "minimal, single red light, symmetrical composition, deep space background",
+      negativePrompts: "not humanoid, not mechanical body, no arms, no legs"
+    };
+  }
+  
+  // If no specific match, return default prompts
+  return {
+    positivePrompts: defaultPositive,
+    negativePrompts: defaultNegative
+  };
+}
 
 // Image Generation with simplified 4-element prompt approach
 export async function generateImage(character: string, description: string = '') {
@@ -193,19 +230,44 @@ export async function generateImage(character: string, description: string = '')
       return errorImagePath;
     }
     
-    // Element 3: Single Wacky Alternate-Universe Twist
-    const twist = await generateTwist(characterName, franchise);
+    // Element 3: Single Wacky Alternate-Universe Twist from static list
+    const twist = generateTwist(characterName, franchise);
     
-    // Element 4: Positive/Negative Language
-    const positivePrompts = "highly detailed, ultra realistic, professional quality";
+    // Log the twist in detail
+    logger.info('IMAGE TWIST DEBUG', {
+      generatedTwist: twist,
+      character: characterName,
+      franchise: franchise,
+      twistType: typeof twist,
+      twistLength: twist.length,
+      twistContainsGroovy: twist.includes('groovy'),
+      timestamp: Date.now(),
+      requestId: `img-twist-${Date.now()}`
+    });
+    
+    // Element 4: Generate dynamic Positive/Negative Language based on character
+    const { positivePrompts, negativePrompts } = generatePromptModifiers(characterName, franchise);
+    
     // Add aspect ratio to match the card's image frame (width/height ratio for 100% width and 62% height of a 5:7 card)
     // This gives us approximately a 16:10 or 1.6:1 aspect ratio
-    const negativePrompts = "not cartoonish, not colorful, not blurry, not distorted, aspect ratio 16:10";
+    const aspectRatio = "aspect ratio 16:10";
     
     // Construct the simplified prompt with the 4 elements
-    const prompt = `${characterName} from ${franchise} ${twist}, ${positivePrompts}, ${negativePrompts}`;
+    const prompt = `${characterName} from ${franchise} ${twist}, ${positivePrompts}, ${negativePrompts}, ${aspectRatio}`;
     
-    logger.info('Generated simplified 4-element prompt', { prompt });
+    // Extensive logging for debugging the image prompt
+    logger.info('IMAGE PROMPT DEBUG', {
+      characterInput: characterName,
+      franchiseInput: franchise,
+      twistUsed: twist,
+      positivePrompts,
+      negativePrompts,
+      aspectRatio,
+      fullPrompt: prompt,
+      apiKey: process.env.HUGGING_FACE_API_KEY ? 'present (truncated)' : 'missing',
+      timestamp: Date.now(),
+      requestId: `img-req-${Date.now()}`
+    });
     
     try {
       const response = await axios.post(
@@ -218,7 +280,7 @@ export async function generateImage(character: string, description: string = '')
             // Adjusted dimensions to match 16:10 aspect ratio for better fit in card frame
             height: 640,
             width: 1024,
-            negative_prompt: "text, watermark, blurry, distorted, low quality, disfigured"
+            negative_prompt: `text, watermark, low quality, disfigured, ${negativePrompts.replace(/not /g, 'no ')}`
           }
         },
         { 
@@ -264,7 +326,7 @@ export async function generateImage(character: string, description: string = '')
               // Adjusted dimensions to match 16:10 aspect ratio for better fit in card frame
               height: 640,
               width: 1024,
-              negative_prompt: "text, watermark, blurry, distorted, low quality"
+              negative_prompt: `text, watermark, low quality, ${negativePrompts.replace(/not /g, 'no ')}`
             }
           },
           { 
@@ -402,13 +464,8 @@ export async function generateDescription(character: string, providedTwist?: str
     // Use the provided twist if available, otherwise generate a new one
     let twist = providedTwist || '';
     if (!twist) {
-      try {
-        twist = await generateTwist(characterName, franchise);
-        logger.info('Generated twist for description because none was provided', { twist, character });
-      } catch (twistError) {
-        logger.error('Error generating twist for description, using default', { error: twistError });
-        twist = 'in an unexpected situation';
-      }
+      twist = generateTwist(characterName, franchise);
+      logger.info('Generated static twist for description because none was provided', { twist, character });
     } else {
       logger.info('Using provided twist for description', { twist, character });
     }
@@ -433,6 +490,18 @@ export async function generateDescription(character: string, providedTwist?: str
     - Make it FUN and MEMORABLE
     </human>`;
     
+    // Extensive logging for debugging the description prompt
+    logger.info('DESCRIPTION PROMPT DEBUG', {
+      characterInput: characterName,
+      franchiseInput: franchise,
+      twistProvided: twist,
+      wasProvidedExternally: !!providedTwist,
+      promptContent: prompt,
+      apiKey: process.env.ANTHROPIC_API_KEY ? 'present (truncated)' : 'missing',
+      timestamp: Date.now(),
+      requestId: `desc-req-${Date.now()}`
+    });
+    
     try {
       const response = await axios.post(
         'https://api.anthropic.com/v1/messages',
@@ -451,6 +520,19 @@ export async function generateDescription(character: string, providedTwist?: str
           }
         }
       );
+      
+      // Log the raw API response for debugging
+      logger.info('DESCRIPTION API RESPONSE', {
+        responseStatus: response.status,
+        responseHeaders: response.headers,
+        responseRole: response.data.content[0].role,
+        responseTextRaw: response.data.content[0].text,
+        model: response.data.model,
+        twistUsed: twist,
+        characterName,
+        franchise,
+        requestId: `desc-resp-${Date.now()}`
+      });
       
       let description = response.data.content[0].text;
       
